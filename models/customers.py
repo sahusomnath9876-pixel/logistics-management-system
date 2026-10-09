@@ -1,8 +1,13 @@
 from sqlalchemy import Integer, String, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import datetime
+from typing import TYPE_CHECKING
 from .base import Base
 
+
+if TYPE_CHECKING:
+    from .users import Users
+    from .inventory import Products
 
 class Customers(Base):
     __tablename__ = "customers"

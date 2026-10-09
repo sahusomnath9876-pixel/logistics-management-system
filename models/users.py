@@ -2,9 +2,12 @@
 from sqlalchemy import create_engine, Integer, String, ForeignKey, Date, func
 from sqlalchemy.orm import  Mapped, mapped_column, relationship
 from .base import Base
+from typing import TYPE_CHECKING
 import datetime
 
-
+if TYPE_CHECKING:
+    from .customers import Customers
+    from .inventory import Warehouse
 
 
 class Users(Base):
