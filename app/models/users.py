@@ -3,27 +3,28 @@ from sqlalchemy import create_engine, Integer, String, ForeignKey, Date, func
 from sqlalchemy.orm import  Mapped, mapped_column, relationship
 from .base import Base
 from typing import TYPE_CHECKING
-import datetime
+from datetime import date
 
 if TYPE_CHECKING:
     from .customers import Customers
-    from .inventory import Warehouse
+    from .inventory import Warehouse, Managers
 
 
 class Users(Base):
     __tablename__ = "users"
 
 
-    user_id : Mapped[int] = mapped_column(primary_key=True)
+    user_id : Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name : Mapped[str] = mapped_column(String(50), nullable=False)
-    phone : Mapped[str] = mapped_column(String(20), nullable=False)
+    mobile_no : Mapped[str] = mapped_column(String(20), nullable=False, unique=True)
     password : Mapped[str] = mapped_column(String(150), nullable=False)
     role : Mapped[str] = mapped_column(String(50), nullable=False)
     is_active : Mapped[bool] = mapped_column(default=True)
-    created_date : Mapped[datetime.date] = mapped_column(Date(), default=func.current_date)
+    created_date : Mapped[date] = mapped_column(Date, default=date.today())
 
     customer : Mapped["Customers"] = relationship(back_populates="user")
-    deliver_agent : Mapped["DeliveryAgent"] = relationship(back_populates="user")
+    delivery_agent : Mapped["DeliveryAgent"] = relationship(back_populates="user")
+    manager : Mapped["Managers"] = relationship(back_populates="user")
 
 
 
@@ -31,9 +32,9 @@ class DeliveryAgent(Base):
 
     __tablename__ = "delivery_agents"
 
-    agent_id : Mapped[int] = mapped_column(primary_key=True)
+    agent_id : Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id : Mapped[int] = mapped_column(ForeignKey("users.user_id"), unique=True, nullable=False)
-    avaivility : Mapped[bool] = mapped_column(default=True, nullable=False)
+    avaivility : Mapped[bool] = mapped_column(default=False, nullable=False)
     warehouse_id : Mapped[int] = mapped_column(ForeignKey("warehouses.warehouse_id"), nullable=False)
     vehicle_no : Mapped[str]  = mapped_column(String(50), nullable=False)  
 

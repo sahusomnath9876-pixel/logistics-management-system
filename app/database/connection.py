@@ -15,7 +15,7 @@ def connection_url():
     return url
 
 
-def engine():
+def db_engine():
     url = connection_url()
 
     if url:
