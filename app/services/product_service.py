@@ -95,6 +95,6 @@ class ProductsService:
             return{"success" : True, "message" : f"Product {products.product_name} Updated Successfuly", "data" : None}
         except TypeError:
             return{"success" : False, "message" : "Invalid Data Type", "data" : None}
-        except Exception:
+        except Exception as e:
             return{"success" : False, "message" : f"Error {e}", "data" : None}
 
