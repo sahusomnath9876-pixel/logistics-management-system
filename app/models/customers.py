@@ -32,12 +32,14 @@ class Orders(Base):
     order_date : Mapped[date] = mapped_column(Date, default=date.today())
     status : Mapped[str] = mapped_column(String(50), default="Order Placed", nullable=False)
     total_amount : Mapped[int] = mapped_column(nullable=False)
+    payment : Mapped[str] = mapped_column(String(50), default="Not Paid")
     
     # estimate_date : Mapped[date] = mapped_column(Date)
 
 
     customer : Mapped["Customers"] = relationship(back_populates="order")
     order_items : Mapped[list["OrderItems"]] = relationship(back_populates="order")
+    payments : Mapped["Payments"] = relationship(back_populates="orders")
     
 
 

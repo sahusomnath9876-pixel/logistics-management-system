@@ -44,6 +44,9 @@ class OrdersRepo:
                     elif updated_type == "amount":
                         order_data.total_amount = updated_data
                         self.__db.commit()
+                    elif updated_type == "payment":
+                        order_data.payment = updated_data
+                        self.__db.commit()
                     
             except TypeError:
                 return None  
@@ -94,7 +97,15 @@ class OItemsRepo:
             self.__db.rollback()
             return f"Error{e}"
                   
-
+    def show_pending_orders(self, warehouse_id):
+        try:
+            stmt = select(self.__order_items).where(self.__order_items.assigned_warehouse == warehouse_id, self.__order_items.current_status == "Order Placed")
+            results = self.__db.scalars(stmt).all()
+            if results:
+                return results
+        except Exception:
+            self.__db.rollback()
+            return None
 
 
     def get_order_items(self, order_id):
@@ -169,7 +180,17 @@ class OItemsRepo:
                 return None
             else:
                 return data.order_id  
-                    
+    def update_current_status(self, id, new_status):
+        try:
+            data = self.__db.get(self.__order_items, id)
+            if data:
+                data.current_status = new_status
+                self.__db.commit()
+                return id
+                
+        except Exception:
+            self.__db.rollback()
+            return None               
             
 
 
@@ -185,21 +206,33 @@ class PaymentsRepo:
             self.__db.add(new_transaction)
             self.__db.commit()
             self.__db.refresh(new_transaction)
+            return new_transaction
 
         except Exception:
             self.__db.rollback()
             return None
-        else:
-            return pay_details
 
-    def get_transaction(self, transaction_id):
-        if transaction_id:
+
+    def get_transaction(self, txn_id):
+        if txn_id:
             try:
-                txn_data = self.__db.get(self.__pay_db, transaction_id)
+                txn_data = self.__db.get(self.__pay_db, txn_id)
 
             except Exception:
                 return None
             else:
                 if txn_data:
                     return txn_data
+
+    def delete_transaction(self, txn_id):
+        try:
+            txn_data = self.get_transaction(txn_id)
+            if txn_data:
+                self.__db.delete(txn_data)
+                self.__db.commit()
+
+        except Exception:
+            return None
+        else:
+            return txn_id
         

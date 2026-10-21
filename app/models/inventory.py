@@ -55,5 +55,3 @@ class Managers(Base):
 
     warehouse : Mapped["Warehouse"] = relationship(back_populates="manager")
     user : Mapped["Users"] = relationship(back_populates="manager")
-
-    

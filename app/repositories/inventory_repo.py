@@ -17,12 +17,12 @@ class ProductsRepo:
             self.__db.add(new_product)
             self.__db.commit()
             self.__db.refresh(new_product)
+            return new_product
 
         except Exception:
             self.__db.rollback()
             return None
-        else:
-            return product
+        
 
     def update_product(self, product_id, column_name, updated_data): #need to add multiple update at once option that helps user
         try:
@@ -126,12 +126,12 @@ class InventoryRepo:
             self.__db.add(new_inventory)
             self.__db.commit()
             self.__db.refresh(new_inventory)
+            return new_inventory
 
-        except Exception:
+        except Exception as e:
             self.__db.rollback()
             return None
-        else:
-            return new_inv
+        
 
     def update_stock(self, id, product_id, stock_type, updated_stock):
         try:
@@ -151,6 +151,7 @@ class InventoryRepo:
             return None
         else:
             return stock_data.stock
+
 
     #stock deletatuon coming as soon as possible
 
@@ -218,3 +219,11 @@ class ManagersRepo:
         )
         if new_manager:
             return new_manager
+
+    def get_manager(self, manager_id):
+        try:
+            data = self.db.get(self.manager_db, manager_id)
+            if data:
+                return data
+        except Exception:
+            return None
