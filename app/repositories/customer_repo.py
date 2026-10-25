@@ -66,7 +66,7 @@ class CustomerRepo:
             else:
                 return customer_id
     def add_customer(self, user_id, city, address=None):
-        new_customer= self.customer_db.create_customer(
+        new_customer= self.create_customer(
             user_id= user_id,
             city= city,
             address= address
