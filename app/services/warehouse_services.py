@@ -1,9 +1,9 @@
 from app.repositories import WarehouseRepo, ProductsRepo
 from app.repositories import InventoryRepo, OrdersRepo, OItemsRepo, ManagersRepo
-
+from typing import Any
 
 class WarehouseServices:
-    def __init__(self, manager_id):
+    def __init__(self, manager_id : int):
         self.manager_id = manager_id
         self.manager_db = ManagersRepo()
         self.warehouse_db = WarehouseRepo()
@@ -12,7 +12,7 @@ class WarehouseServices:
         self.order_items_db = OItemsRepo()
         self.products_db = ProductsRepo()
 
-    def pending_orders(self):
+    def pending_orders(self) -> dict[str, Any]:
         try:
             manager = self.manager_db.get_manager(self.manager_id)
             if not manager:
@@ -25,7 +25,7 @@ class WarehouseServices:
         except Exception as e:
             return{"success" : False, "message" : f"Error{e}", "data" : None}
 
-    def dispatch_orders(self, id, status):
+    def dispatch_orders(self, id : int, status : str) -> dict[str, Any]:
         try:
             status = str(status)
             orders = self.pending_orders()

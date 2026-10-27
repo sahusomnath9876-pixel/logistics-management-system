@@ -1,12 +1,12 @@
 from app.repositories import CustomerRepo, UserRepo, WarehouseRepo, ProductsRepo
 from app.repositories import InventoryRepo, OrdersRepo, OItemsRepo, CartRepo, get_travel_data
-import random
+from typing import Any
 
 
 
 
 class CustomerService:
-    def __init__(self, user_id):
+    def __init__(self, user_id : int):
         self.user_id = user_id
         self.user_db = UserRepo()
         self.customer_db = CustomerRepo()
@@ -16,7 +16,7 @@ class CustomerService:
     
     
 
-    def search_product(self, search): #stock checking based result comming in next feature
+    def search_product(self, search : str) -> object | None: #stock checking based result comming in next feature
         try:
             search = str(search)
             search_result = self.products_db.browse_product(search)
@@ -29,7 +29,7 @@ class CustomerService:
             else:
                 return None
 
-    def add_to_cart(self, product_id, quantity):
+    def add_to_cart(self, product_id : int, quantity : int) -> str:
         try:
             product_id = int(product_id)
             quantity = int(quantity)
@@ -55,7 +55,7 @@ class CustomerService:
         except Exception:
             return "Error"
 
-    def show_cart_data(self):
+    def show_cart_data(self) -> dict[str, Any]:
         user = self.user_db.get_user("user_id", self.user_id)
         customer_id = user.customer.customer_id
         cart_data = self.cart_db.get_cart(customer_id)
@@ -64,7 +64,7 @@ class CustomerService:
         else:
             return{"success" : True, "message" : "Cart Data Fetched Successfuly", "data" : cart_data}
 
-    def remove_from_cart(self, id):
+    def remove_from_cart(self, id : int) -> dict[str, Any]:
         cart_data = self.show_cart_data()
         if cart_data.get("success"):
             cart = cart_data.get("data")

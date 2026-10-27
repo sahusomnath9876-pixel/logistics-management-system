@@ -1,5 +1,6 @@
 from app.repositories import UserRepo, CustomerRepo, AgentRepo, WarehouseRepo, ManagersRepo
 import bcrypt
+from typing import Any
 
 
 class Authentication:
@@ -11,7 +12,7 @@ class Authentication:
         self.warehouse_db = WarehouseRepo()
 
 
-    def user_signUp(self, name, mobile_no, password, city):
+    def user_signUp(self, name : str, mobile_no : str, password : str, city : str) -> dict[str, Any]:
             if not (name and mobile_no and password and city):
                 return{"success" : False, "message" : "User Alreday Exists", "user" : None}
     
@@ -54,7 +55,7 @@ class Authentication:
             except Exception as e:
                 return{"success" : False, "message" : f"Error{e}", "user" : None}
                 
-    def agent_signUp(self, name, mobile_no, password, wearehouse_id, vehicle_no): #warehouse_must need to accept this for acess registration
+    def agent_signUp(self, name : str, mobile_no : str, password : str, wearehouse_id : int, vehicle_no : str) -> dict[str, Any]: #warehouse_must need to accept this for acess registration
             if not (name and mobile_no and password and wearehouse_id and vehicle_no):
                 return{"success" : False, "message" : "Fields Required", "user" : None}
     
@@ -102,7 +103,7 @@ class Authentication:
             except Exception as e:
                 return{"success" : False, "message" : f"Error{e}", "user" : None}
 
-    def manager_signUP(self, name, mobile_no, password, wearehouse_id, manager_id):
+    def manager_signUP(self, name : str, mobile_no : str, password : str, wearehouse_id : int, manager_id : int) -> dict[str, Any]:
         if not (name and mobile_no and password and wearehouse_id and manager_id):
             return{"success" : False, "message" : "Fields Required", "user" : None}
 
@@ -145,7 +146,7 @@ class Authentication:
         except Exception as e:
             return{"success" : False, "message" : f"Error{e}", "user" : None}
 
-    def signIN(self, mobile_no, password):
+    def signIN(self, mobile_no : str, password : str) -> dict[str, Any]:
         if not (mobile_no and password):
             return{"success" : False, "message" : "Fields Required", "user" : None}
         try:

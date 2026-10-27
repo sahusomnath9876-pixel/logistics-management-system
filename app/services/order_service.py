@@ -3,9 +3,10 @@ from app.repositories import OItemsRepo, InventoryRepo, WarehouseRepo, get_trave
 from app.services import CustomerService
 from datetime import datetime, timedelta
 import random
+from typing import Any
 
 class OrderService:
-    def __init__(self, customer_id):
+    def __init__(self, customer_id : int):
         self.customer_id = customer_id
         self.user_db = UserRepo()
         self.customer_db = CustomerRepo()
@@ -15,13 +16,13 @@ class OrderService:
         self.products_db = ProductsRepo()
         self.inventory_db = InventoryRepo()
 
-    def order_id_maker(self):
+    def order_id_maker(self) -> int | None:
         random_nums = str(random.randint(100000, 900000))
         alpha = "OD"
         order_id = alpha + random_nums
         return order_id
 
-    def update_stock_data(self, id, product_id, quantity):
+    def update_stock_data(self, id : int, product_id : int, quantity : int) -> int | None:
         stock, reserved_stock = self.inventory_db.stock_data(id, product_id)
         if stock:
             updated_stock = stock - quantity
@@ -29,7 +30,7 @@ class OrderService:
             if save_stock:
                 return save_stock
             
-    def add_stock_data(self, id, product_id, quantity):
+    def add_stock_data(self, id : int, product_id : int, quantity : int) -> int | None:
         stock, reserved_stock = self.inventory_db.stock_data(id, product_id)
         if stock:
             updated_stock = stock + quantity
@@ -38,7 +39,7 @@ class OrderService:
                 return save_stock
 
 
-    def availabe_warehouse(self, product_id, quantity):
+    def availabe_warehouse(self, product_id : int, quantity : int) -> tuple:
         verify = self.inventory_db.fetch_warehouse(product_id, quantity)
         customer = self.customer_db.get_customer(self.customer_id)
         user_id = customer.user.user_id
@@ -61,7 +62,7 @@ class OrderService:
             return warehouse_id, delivery_time, inventory_id
         return None
 
-    def excpected_delivery_date(self, distance_hours):
+    def excpected_delivery_date(self, distance_hours : float) -> Any:
         travel_hours = distance_hours
         handling_time = 4
         delivery_buffer = 24
@@ -76,7 +77,7 @@ class OrderService:
         return expected_date
 
 
-    def create_order(self):
+    def create_order(self) -> dict[str, Any]:
         try:
             order_id = self.order_id_maker()
             new_order = self.orders_db.create_order(
@@ -91,7 +92,7 @@ class OrderService:
         except Exception as e:
             return{"success" : False, "message" : f"Error {e}", "data" : None}
 
-    def save_order_details(self):
+    def save_order_details(self) -> dict[str, Any]:
         try:
             created_order = self.create_order()
             if not created_order.get("success"):
@@ -131,7 +132,7 @@ class OrderService:
         except Exception as e:
             return{"success" : False, "message" : f"Error{e}", "data" : None}
         
-    def place_order(self):
+    def place_order(self) -> dict[str, Any]:
         try:
             customer = self.customer_db.get_customer(self.customer_id)
             if customer.address.lower() == "not added":
@@ -147,14 +148,14 @@ class OrderService:
         except Exception as e:
             return{"success" : False, "message" : "Unable To Place Your Order", "data" : None}
             
-    def show_my_orders(self):
+    def show_my_orders(self) -> dict[str, Any]:
             order_data = self.orders_db.get_customer_order(self.customer_id)
             if order_data:
                 return{"success" : True, "message" : "Data Fetched Successfuly", "data" : order_data}  
             else:
                 return{"success" : False, "message" : "You haven't Placed any orders yet..", "data" : None}
     
-    def cancel_my_order(self, order_id): ##we will need to modify this to get status in cancelled and dispatched
+    def cancel_my_order(self, order_id : str) -> dict[str, Any]: ##we will need to modify this to get status in cancelled and dispatched
         order_data = self.orders_db.get_order(order_id)
         if order_data.status.lower() == "order placed":
             cancelled_order = self.orders_db.update_status(order_id, "status", "Cancelled")

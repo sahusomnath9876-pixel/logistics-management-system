@@ -1,9 +1,10 @@
 from geopy.geocoders import Nominatim
 import requests
+import asyncio
 
 
 
-def get_travel_data(city1, city2):
+def get_travel_data(city1 : str, city2 : str) -> dict:
     # Initialize geolocator to convert city names to coordinates
     geolocator = Nominatim(user_agent="travel_calculator_project")
     

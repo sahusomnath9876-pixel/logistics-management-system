@@ -1,6 +1,6 @@
 from app.repositories import WarehouseRepo, ProductsRepo
 from app.repositories import InventoryRepo, ManagersRepo
-
+from typing import Any
 
 class ProductsService:
     def __init__(self):
@@ -9,7 +9,7 @@ class ProductsService:
         self.warehouse_db = WarehouseRepo()
 
 
-    def add_products(self, p_name, category, weight, price, warehouse_id):
+    def add_products(self, p_name : str, category : str, weight : str, price : int, warehouse_id : int) -> dict[str, Any]:
         try:            
             product_name = str(p_name)
             category = str(category)
@@ -41,7 +41,7 @@ class ProductsService:
         except Exception as e:
             return{"success" : False, "message" : f"Error {e} ", "data" : None}
         
-    def add_stock(self, inv_id, product_id, s_type, stock):
+    def add_stock(self, inv_id : int, product_id : int, stock : int, s_type : str = "stock") -> dict[str, Any]:
             
         try:
             inv_id = int(inv_id)
@@ -65,7 +65,7 @@ class ProductsService:
             return{"success" : False, "message" : f"Error {e}", "data" : None}
 
 
-    def show_products(self, warehouse_id):
+    def show_products(self, warehouse_id : int) -> dict[str, Any]:
         try:
             warehouse_id = int(warehouse_id)
             warehouse = self.warehouse_db.get_warehouse(warehouse_id)
@@ -78,7 +78,7 @@ class ProductsService:
         except Exception as e:
             return{"success" : False, "message" : f"Error {e}", "data" : None}
 
-    def update_product_details(self, product_id, u_type, new_data):
+    def update_product_details(self, product_id : int, u_type : str, new_data : Any) -> dict[str, Any]:
         try:
             product_id = int(product_id)
             products = self.products_db.get_product(product_id)

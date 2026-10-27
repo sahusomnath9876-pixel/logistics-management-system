@@ -1,6 +1,7 @@
 from app.models import Orders, OrderItems, Payments
 from app.database import SessionLocal
 from sqlalchemy import select
+from typing import Any
 
 
 class OrdersRepo:
@@ -8,7 +9,7 @@ class OrdersRepo:
         self.__db = SessionLocal()
         self.__order_db = Orders
 
-    def create_order(self, **order):
+    def create_order(self, **order : Any) -> object | None:
         try:
             new_order = self.__order_db(**order)
 
@@ -22,7 +23,7 @@ class OrdersRepo:
         else:
             return new_order
 
-    def get_order(self, order_id):
+    def get_order(self, order_id : str) -> object | None:
         if order_id:
             try:
                 order_data = self.__db.get(self.__order_db, order_id)
@@ -32,7 +33,7 @@ class OrdersRepo:
             else:
                 return order_data
 
-    def update_status(self, order_id, updated_type, updated_data):
+    def update_status(self, order_id : str, updated_type : str, updated_data : Any) -> str | None:
         if updated_data:
             updated_type = str(updated_type).lower()
             try:
@@ -55,7 +56,7 @@ class OrdersRepo:
                 return None
             else:
                 return order_data.order_id
-    def delete_order(self, order_id):
+    def delete_order(self, order_id : str) -> str | None:
         if order_id:
             try:
                 order_data = self.get_order(order_id)
@@ -68,7 +69,7 @@ class OrdersRepo:
             else:
                 return order_id
 
-    def get_customer_order(self, customer_id):
+    def get_customer_order(self, customer_id : int) -> object | None:
         try:
             stmt = select(self.__order_db).where(self.__order_db.customer_id == customer_id)
             result = self.__db.scalars(stmt).all()
@@ -85,7 +86,7 @@ class OItemsRepo:
         self.__db = SessionLocal()
         self.__order_items = OrderItems
 
-    def create_order_items(self, **order_items):
+    def create_order_items(self, **order_items : Any) -> object | None:
         try:
             new_order_items = self.__order_items(**order_items)
 
@@ -95,9 +96,9 @@ class OItemsRepo:
             return new_order_items
         except Exception as e:
             self.__db.rollback()
-            return f"Error{e}"
+            return None
                   
-    def show_pending_orders(self, warehouse_id):
+    def show_pending_orders(self, warehouse_id : int) -> object | None:
         try:
             stmt = select(self.__order_items).where(self.__order_items.assigned_warehouse == warehouse_id, self.__order_items.current_status == "Order Placed")
             results = self.__db.scalars(stmt).all()
@@ -108,7 +109,7 @@ class OItemsRepo:
             return None
 
 
-    def get_order_items(self, order_id):
+    def get_order_items(self, order_id : str) -> int | None:
         if id:
             try:
                 stmt = select(self.__order_items).where(self.__order_items.order_id == order_id)
@@ -120,7 +121,7 @@ class OItemsRepo:
 
             except Exception:
                 return None
-    def fetch_order_items(self, order_id):
+    def fetch_order_items(self, order_id : str) -> object | None:
         if id:
             try:
                 stmt = select(self.__order_items).where(self.__order_items.order_id == order_id)
@@ -130,7 +131,7 @@ class OItemsRepo:
             except Exception:
                 return None
 
-    def assign_warehouse(self, oi_id, warehouse_id):
+    def assign_warehouse(self, oi_id : int, warehouse_id : int) -> int | None:
         try:
             stmt = select(self.__order_items).where(self.__order_items.id == oi_id, self.__order_items.assigned_warehouse.is_(None))
             data = self.__db.scalars(stmt).first()
@@ -141,11 +142,11 @@ class OItemsRepo:
                 return oi_id
         except Exception as e:
             self.__db.rollback()
-            return "Error", e
+            return None
 
 
 
-    def update_order_items(self, id, date):
+    def update_order_items(self, id : int, date : str) -> int | None:
         try:
             order_items = self.__db.get(self.__order_items, id)
             if order_items:
@@ -158,7 +159,7 @@ class OItemsRepo:
             return f"Error{e}"
 
         
-    def update_status(self, order_id, updated_type, updated_data):
+    def update_status(self, order_id : str, updated_type : str, updated_data : Any) -> str | None:
         if updated_data:
             updated_type = str(updated_type).lower()
             try:
@@ -180,7 +181,7 @@ class OItemsRepo:
                 return None
             else:
                 return data.order_id  
-    def update_current_status(self, id, new_status):
+    def update_current_status(self, id : int, new_status : str) -> int | None:
         try:
             data = self.__db.get(self.__order_items, id)
             if data:
@@ -199,7 +200,7 @@ class PaymentsRepo:
         self.__db = SessionLocal()
         self.__pay_db = Payments
 
-    def create_transaction(self, **pay_details):
+    def create_transaction(self, **pay_details : Any) -> object | None:
         try:
             new_transaction = self.__pay_db(**pay_details)
 
@@ -213,7 +214,7 @@ class PaymentsRepo:
             return None
 
 
-    def get_transaction(self, txn_id):
+    def get_transaction(self, txn_id : str) -> object | None:
         if txn_id:
             try:
                 txn_data = self.__db.get(self.__pay_db, txn_id)
@@ -224,7 +225,7 @@ class PaymentsRepo:
                 if txn_data:
                     return txn_data
 
-    def delete_transaction(self, txn_id):
+    def delete_transaction(self, txn_id : str) -> str | None:
         try:
             txn_data = self.get_transaction(txn_id)
             if txn_data:

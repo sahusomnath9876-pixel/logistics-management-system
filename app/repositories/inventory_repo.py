@@ -1,6 +1,7 @@
 from app.models import Products, Inventory, Warehouse, Managers
 from app.database import SessionLocal
 from sqlalchemy import select
+from typing import Any
 
 
 class ProductsRepo:
@@ -8,10 +9,10 @@ class ProductsRepo:
         self.__db = SessionLocal()
         self.__products = Products
 
-    def get_product(self, product_id):
+    def get_product(self, product_id : int) -> object | None:
         return self.__db.get(self.__products, product_id)
 
-    def add_product(self, **product):
+    def add_product(self, **product : Any) -> object | None:
         try:
             new_product = self.__products(**product)
             self.__db.add(new_product)
@@ -24,7 +25,7 @@ class ProductsRepo:
             return None
         
 
-    def update_product(self, product_id, column_name, updated_data): #need to add multiple update at once option that helps user
+    def update_product(self, product_id : int, column_name : str, updated_data : Any) -> int | None: #need to add multiple update at once option that helps user
         try:
             product_data = self.get_product(product_id)
             if product_data:
@@ -47,7 +48,7 @@ class ProductsRepo:
         else:
             return product_id
 
-    def delete_product(self, product_id):
+    def delete_product(self, product_id : int) -> int:
         try:
             product_data = self.get_product(product_id)
             if product_data:
@@ -60,7 +61,7 @@ class ProductsRepo:
         else:
             return product_id
 
-    def browse_product(self, user_search):
+    def browse_product(self, user_search : str) -> object:
             stmt = select(self.__products).where(self.__products.product_name.ilike(f"%{user_search}%") )
             search_data = self.__db.scalars(stmt).all()
             return search_data

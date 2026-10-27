@@ -1,6 +1,7 @@
 from app.models import Customers, CustomerCart
 from app.database import SessionLocal
 from sqlalchemy import select
+from typing import Any
 
 
 class CustomerRepo:
@@ -8,7 +9,7 @@ class CustomerRepo:
         self.__cs_db = Customers
         self.__db = SessionLocal()
 
-    def create_customer(self, **customer):
+    def create_customer(self, **customer : Any) -> object | None:
         try:
             new_customer = self.__cs_db(**customer)
 
@@ -22,7 +23,7 @@ class CustomerRepo:
         else:
             return customer
 
-    def get_customer(self, customer_id):
+    def get_customer(self, customer_id : int) -> object | None:
         try:
             if customer_id:
                 customer_data = self.__db.get(self.__cs_db, customer_id)
@@ -32,7 +33,7 @@ class CustomerRepo:
         else:
             return customer_data
 
-    def update_customer(self, customer_id, column_name, new_data):
+    def update_customer(self, customer_id : int, column_name : str, new_data : str) -> str | None:
         if customer_id:
             try:
                 custome_data = self.get_customer(customer_id)
@@ -52,7 +53,7 @@ class CustomerRepo:
             else:
                 return column_name
 
-    def delete_customer(self, customer_id):
+    def delete_customer(self, customer_id : int) -> int | None:
         if customer_id:
             try:            
                 customer_data = self.get_customer(customer_id)
@@ -65,7 +66,7 @@ class CustomerRepo:
                 return None
             else:
                 return customer_id
-    def add_customer(self, user_id, city, address=None):
+    def add_customer(self, user_id : int, city : str, address : str | None = None) -> int | None:
         new_customer= self.create_customer(
             user_id= user_id,
             city= city,
@@ -80,20 +81,20 @@ class CartRepo:
         self.cart_db = CustomerCart
         self.db = SessionLocal()
 
-    def get_cart(self, customer_id):
+    def get_cart(self, customer_id : int) -> object | None:
         stmt = select(self.cart_db).where(self.cart_db.customer_id == customer_id)
         results = self.db.scalars(stmt).all()
         if results:
             return results
 
-    def assign_warehouse(self, customer_id):
+    def assign_warehouse(self, customer_id : int) -> int | None:
         cart_data = self.get_cart(customer_id)
         if cart_data:
             for data in cart_data:
                 data.product_id
 
 
-    def add_cart(self, customer_id, product_id, qunatity, total_price):
+    def add_cart(self, customer_id : int, product_id : int, qunatity : int, total_price : int) -> int | None:
         try:
             new_cart = self.cart_db(
                 customer_id= customer_id,
@@ -112,7 +113,7 @@ class CartRepo:
         else:
             return product_id
 
-    def delete_cart(self, customer_id):
+    def delete_cart(self, customer_id : int) -> int | None:
         try:
             cart = self.get_cart(customer_id)
             for data in cart:
@@ -121,13 +122,13 @@ class CartRepo:
                     self.db.commit()
         except Exception:
                 self.db.rollback()
-                return "Error"
+                return None
         else:
             return customer_id
 
 
 
-    def remove_cart(self, id):
+    def remove_cart(self, id : int) -> int | None:
         try:
             cart_data = self.db.get(self.cart_db, id)
             if cart_data:
@@ -136,11 +137,4 @@ class CartRepo:
                 return id
         except Exception:
             self.db.rollback()
-            return "Error"
-    
-            
-               
-
-
-
-            
+            return None

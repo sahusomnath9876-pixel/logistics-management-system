@@ -1,7 +1,7 @@
 from app.models import Users, DeliveryAgent
 from app.database import SessionLocal
 from sqlalchemy import select
-
+from typing import Any
 
 class UserRepo:
     def __init__(self):
@@ -9,7 +9,7 @@ class UserRepo:
         self.__db = SessionLocal()
 
 
-    def get_user(self, get_type, type_data):  #user can be get through his mobile number
+    def get_user(self, get_type : str, type_data : Any) -> object | None:  #user can be get through his mobile number
 
         try:
             user_data = None
@@ -30,7 +30,7 @@ class UserRepo:
         else:
             return user_data
 
-    def create_user(self, **user_info):
+    def create_user(self, **user_info : Any) -> object | None:
         if user_info:
             new_user = self.__user_db(**user_info)
             try:
@@ -44,7 +44,7 @@ class UserRepo:
             else:
                 return user_info
 
-    def update_user(self, user_id, column_name, new_data):
+    def update_user(self, user_id : int, column_name : str, new_data : Any) -> str | None:
         if user_id:
             try:
                 user_data = self.__db.get(self.__user_db, user_id)
@@ -66,7 +66,7 @@ class UserRepo:
             else:
                 return column_name
 
-    def delete_user(self, user_id):
+    def delete_user(self, user_id : int) -> int | None:
         if user_id:
             try: 
                 user_data = self.__db.get(self.__user_db, user_id)
@@ -85,10 +85,10 @@ class AgentRepo:
         self.__db = SessionLocal()
         self.__agent = DeliveryAgent
 
-    def get_agent(self, agent_id):
+    def get_agent(self, agent_id : int) -> object | None:
         return self.__db.get(self.__agent, agent_id)
 
-    def create_agent(self, **agent_details):
+    def create_agent(self, **agent_details : Any) -> object | None:
         try:
             new_agent = self.__agent(**agent_details)
 
@@ -102,7 +102,7 @@ class AgentRepo:
         else:
             return agent_details
 
-    def update_avaivality(self, agent_id, avaivality):
+    def update_avaivality(self, agent_id : int, avaivality : bool) -> int | None:
         try:
             agent_data = self.get_agent(agent_id)
 
@@ -116,7 +116,7 @@ class AgentRepo:
         else:
             return agent_id
 
-    def delete_agent(self, agent_id):
+    def delete_agent(self, agent_id : int) -> int | None:
         try:
             agent_data = self.get_agent(agent_id)
             if agent_data:
@@ -129,7 +129,7 @@ class AgentRepo:
         else:
             return agent_id
 
-    def add_agent(self, user_id, warehouse_id, vehicle_no):
+    def add_agent(self, user_id : int, warehouse_id : int, vehicle_no : str) -> int:
 
             new_agent = self.agent_db.create_agent(
                 user_id= user_id,

@@ -1,13 +1,13 @@
 from app.repositories import PaymentsRepo, OrdersRepo
 from datetime import datetime, date, time
-
+from typing import Any
 class PaymentsService:
     def __init__(self, customer_id):
         self.customer_id = customer_id
         self.payments_db = PaymentsRepo()
         self.orders_db = OrdersRepo()
 
-    def generate_transaction_id(self):
+    def generate_transaction_id(self) -> str:
         now = datetime.now()
 
         letters = "TXN"
@@ -15,7 +15,7 @@ class PaymentsService:
         txn_id = letters + date_time
         return txn_id
 
-    def make_transaction(self, order_id, amount, txn_method):
+    def make_transaction(self, order_id : str, amount : int, txn_method : str) -> dict[str, Any]:
         try:
             order_id = str(order_id)
             amount = int(amount)
@@ -36,7 +36,7 @@ class PaymentsService:
         except Exception as e:
             return{"success" : False, "message" : f"Error {e}", "data" : None}
         
-    def make_payment(self, order_id, total_amount, payment_method, cerdinatals): # need to add upi and card logic and self amount getter
+    def make_payment(self, order_id : str, total_amount : int, payment_method : str, cerdinatals : str) -> dict[str, Any]: # need to add upi and card logic and self amount getter
         try:
             pay_options = ["COD", "UPI", "CARD"]
             order_id = str(order_id)
