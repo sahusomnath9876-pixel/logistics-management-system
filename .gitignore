@@ -16,3 +16,11 @@ venv/
 .DS_Store
 Thumbs.db
 devlopments plans.txt
+
+#pytest cach
+.pytest_cache/
+__pycache__/
+*.pyc
+
+#plans
+development_plans.txt
