@@ -163,7 +163,9 @@ class WarehouseRepo:
         self.__warehouse = Warehouse
 
     def get_warehouse(self, warehouse_id):
-        return self.__db.get(self.__warehouse, warehouse_id)
+        data = self.__db.get(self.__warehouse, warehouse_id)
+        if data:
+            return data
 
     
 

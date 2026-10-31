@@ -141,9 +141,9 @@ class OrderService:
             if order.get("success"):
                 delete_cart = self.cart_db.delete_cart(self.customer_id)
                 if delete_cart:
-                    return order.get("message")
+                    return order
             else: 
-                return order.get("message")
+                return order
 
         except Exception as e:
             return{"success" : False, "message" : "Unable To Place Your Order", "data" : None}
