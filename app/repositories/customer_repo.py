@@ -78,12 +78,12 @@ class CustomerRepo:
     
 class CartRepo:
     def __init__(self):
-        self.cart_db = CustomerCart
-        self.db = SessionLocal()
+        self.__cart_db = CustomerCart
+        self.__db = SessionLocal()
 
     def get_cart(self, customer_id : int) -> object | None:
-        stmt = select(self.cart_db).where(self.cart_db.customer_id == customer_id)
-        results = self.db.scalars(stmt).all()
+        stmt = select(self.__cart_db).where(self.__cart_db.customer_id == customer_id)
+        results = self.__db.scalars(stmt).all()
         if results:
             return results
 
@@ -96,18 +96,18 @@ class CartRepo:
 
     def add_cart(self, customer_id : int, product_id : int, qunatity : int, total_price : int) -> int | None:
         try:
-            new_cart = self.cart_db(
+            new_cart = self.__cart_db(
                 customer_id= customer_id,
                 product_id= product_id,
                 qunatity= qunatity,
                 total_price= total_price
             )
-            self.db.add(new_cart)
-            self.db.commit()
-            self.db.refresh()
+            self.__db.add(new_cart)
+            self.__db.commit()
+            self.__db.refresh()
 
         except Exception as e:
-            self.db.rollback()
+            self.__db.rollback()
             return("Error", e)
 
         else:
@@ -118,10 +118,10 @@ class CartRepo:
             cart = self.get_cart(customer_id)
             for data in cart:
                 if data:
-                    self.db.delete(data)
-                    self.db.commit()
+                    self.__db.delete(data)
+                    self.__db.commit()
         except Exception:
-                self.db.rollback()
+                self.__db.rollback()
                 return None
         else:
             return customer_id
@@ -130,11 +130,11 @@ class CartRepo:
 
     def remove_cart(self, id : int) -> int | None:
         try:
-            cart_data = self.db.get(self.cart_db, id)
+            cart_data = self.__db.get(self.__cart_db, id)
             if cart_data:
-                self.db.delete(cart_data)
-                self.db.commit()
+                self.__db.delete(cart_data)
+                self.__db.commit()
                 return id
         except Exception:
-            self.db.rollback()
+            self.__db.rollback()
             return None

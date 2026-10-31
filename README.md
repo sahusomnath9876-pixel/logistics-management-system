@@ -120,7 +120,6 @@ Logistics Management Project/
 ├── .env
 ├── .gitignore
 ├── development_plans.txt
-├── main.py
 └── requirements.txt
 ```
 

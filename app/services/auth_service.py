@@ -5,11 +5,11 @@ from typing import Any
 
 class Authentication:
     def __init__(self):
-        self.user_db = UserRepo()
-        self.customer_db = CustomerRepo()
-        self.manager_db = ManagersRepo()
-        self.agent_db = AgentRepo()
-        self.warehouse_db = WarehouseRepo()
+        self.__user_db = UserRepo()
+        self.__customer_db = CustomerRepo()
+        self.__manager_db = ManagersRepo()
+        self.__agent_db = AgentRepo()
+        self.__warehouse_db = WarehouseRepo()
 
 
     def user_signUp(self, name : str, mobile_no : str, password : str, city : str) -> dict[str, Any]:
@@ -27,19 +27,19 @@ class Authentication:
 
                 hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode()
                 get_type = "mobile_no"
-                user_data = self.user_db.get_user(get_type, mobile_no)
+                user_data = self.__user_db.get_user(get_type, mobile_no)
                 if not user_data:
-                    new_user = self.user_db.create_user(
+                    new_user = self.__user_db.create_user(
                         name= name,
                         mobile_no= mobile_no,
                         password= hashed_password,
                         role= "Customer",
                     )
                     if new_user: # transaction handling need as of now im doing manually later we'will upgrade
-                        user_data = self.user_db.get_user(get_type, mobile_no)
-                        create_customer = self.customer_db.add_customer(user_data.user_id, city)
+                        user_data = self.__user_db.get_user(get_type, mobile_no)
+                        create_customer = self.__customer_db.add_customer(user_data.user_id, city)
                         if not create_customer:
-                            delete_user = self.user_db.delete_user(user_data.user_id)
+                            delete_user = self.__user_db.delete_user(user_data.user_id)
                             return{"success" : False, "message" : "Error", "user" : None}
                         else:
                             return{"success" : True, "message" : "Registerd Successfuly", "user" : user_data.user_id}
@@ -67,7 +67,7 @@ class Authentication:
                     return{"success" : False, "message" : "Invalid Mobile Number Length", "user" : None}                    
                 password = str(password)
                 wearehouse_id = int(wearehouse_id)
-                warehouse_data = self.warehouse_db.get_warehouse(wearehouse_id)
+                warehouse_data = self.__warehouse_db.get_warehouse(wearehouse_id)
                 if not warehouse_data: 
                     return{"success" : False, "message" : "Invalid Warehouse Id", "user" : None}             
                 vehicle_no = str(vehicle_no)
@@ -75,19 +75,19 @@ class Authentication:
                 hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode()
 
                 get_type = "mobile_no"
-                user_data = self.user_db.get_user(get_type, mobile_no)
+                user_data = self.__user_db.get_user(get_type, mobile_no)
                 if not user_data:
-                    new_user = self.user_db.create_user(
+                    new_user = self.__user_db.create_user(
                         name= name,
                         mobile_no= mobile_no,
                         password= hashed_password,
                         role= "Agent",
                     )
                     if new_user:
-                        user_data = self.user_db.get_user(get_type, mobile_no)
-                        create_agent = self.agent_db.add_agent(user_data.user_id, wearehouse_id, vehicle_no)
+                        user_data = self.__user_db.get_user(get_type, mobile_no)
+                        create_agent = self.__agent_db.add_agent(user_data.user_id, wearehouse_id, vehicle_no)
                         if not create_agent:
-                            delete_user = self.user_db.delete_user(user_data.user_id)
+                            delete_user = self.__user_db.delete_user(user_data.user_id)
                             return{"success" : False, "message" : "Error", "user" : None}                           
                         else:
                             return{"success" : True, "message" : "Registerd Successfuly", "user" : user_data.user_id}
@@ -116,22 +116,22 @@ class Authentication:
             wearehouse_id = int(wearehouse_id)
             manager_id = int(manager_id)
 
-            user_data = self.user_db.get_user("mobile_no", mobile_no)
+            user_data = self.__user_db.get_user("mobile_no", mobile_no)
             if not user_data:
                 hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode()
-                warehouse_data = self.warehouse_db.get_warehouse(wearehouse_id)
+                warehouse_data = self.__warehouse_db.get_warehouse(wearehouse_id)
                 if warehouse_data and warehouse_data.manager_id == manager_id:
-                    create_user = self.user_db.create_user(
+                    create_user = self.__user_db.create_user(
                         name= name, 
                         mobile_no= mobile_no,
                         password= hashed_password,
                         role= "Manger"                        
                     )
                     if create_user:
-                        user_data = self.user_db.get_user("mobile_no", mobile_no)
+                        user_data = self.__user_db.get_user("mobile_no", mobile_no)
                         manager = self.manager_db.add_manager(manager_id, wearehouse_id, user_data.user_id)
                         if not manager:
-                            delete_user = self.user_db.delete_user(user_data.user_id)
+                            delete_user = self.__user_db.delete_user(user_data.user_id)
                             return{"success" : False, "message" : "Error", "user" : None}
                         else:
                             return{"success" : True, "message" : "Registerd Successfuly", "user" : user_data.user_id}
@@ -154,7 +154,7 @@ class Authentication:
             if len(mobile_no) != 10:
                 return{"success" : False, "message" : "Invalid Mobile Number Length", "user" : None}
             auth_type = "mobile_no"
-            user_data = self.user_db.get_user(auth_type, mobile_no)
+            user_data = self.__user_db.get_user(auth_type, mobile_no)
             if not user_data:
                 return{"success" : False, "message" : "User Not Exists", "user" : None}
                 
