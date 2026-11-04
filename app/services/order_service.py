@@ -1,20 +1,20 @@
 from app.repositories import CartRepo, UserRepo, CustomerRepo, ProductsRepo, OrdersRepo
-from app.repositories import OItemsRepo, InventoryRepo, WarehouseRepo, get_travel_data
-from app.services import CustomerService
+from app.repositories import OItemsRepo, InventoryRepo, get_travel_data
+from app.exceptions import UnexpectedErrorAccuerd, EmptyCart, NotFoundError
 from datetime import datetime, timedelta
 import random
 from typing import Any
 
 class OrderService:
-    def __init__(self, customer_id : int):
+    def __init__(self, customer_id : int, db):
         self.customer_id = customer_id
-        self.__user_db = UserRepo()
-        self.__customer_db = CustomerRepo()
-        self.__cart_db = CartRepo()
-        self.__orders_db = OrdersRepo()
-        self.__order_items_db = OItemsRepo()
-        self.__products_db = ProductsRepo()
-        self.__inventory_db = InventoryRepo()
+        self.__user_db = UserRepo(db)
+        self.__customer_db = CustomerRepo(db)
+        self.__cart_db = CartRepo(db)
+        self.__orders_db = OrdersRepo(db)
+        self.__order_items_db = OItemsRepo(db)
+        self.__products_db = ProductsRepo(db)
+        self.__inventory_db = InventoryRepo(db)
 
     def __order_id_maker(self) -> int | None:
         random_nums = str(random.randint(100000, 900000))
@@ -77,30 +77,28 @@ class OrderService:
         return expected_date
 
 
-    def create_order(self) -> dict[str, Any]:
-        try:
-            order_id = self.__order_id_maker()
-            new_order = self.__orders_db.create_order(
-                order_id= order_id,
-                customer_id= self.customer_id,
-                total_amount= 0
-            )
-            if not new_order:
-                return{"success" : False, "message" : "Error While Placing Your Order", "data" : None}
-            else:
-                return{"success" : True, "message" : "Order Created Successfuly", "data" : new_order}
-        except Exception as e:
-            return{"success" : False, "message" : f"Error {e}", "data" : None}
+    def create_order(self) -> object:
+        order_id = self.__order_id_maker()
+        new_order = self.__orders_db.create_order(
+            order_id= order_id,
+            customer_id= self.customer_id,
+            total_amount= 0
+        )
+        if not new_order:
+            raise UnexpectedErrorAccuerd("Error While Placing Your Order")
+        else:
+            return new_order
 
-    def __save_order_details(self) -> dict[str, Any]:
-        try:
+
+    def __save_order_details(self) -> object:
+
             created_order = self.create_order()
-            if not created_order.get("success"):
-                return created_order.get("message")
-            order_data = created_order.get("data")
+            if not created_order:
+                raise UnexpectedErrorAccuerd("Error While Creating Your Order")
+            order_data = created_order
             customer_cart = self.__cart_db.get_cart(self.customer_id)
             if not customer_cart:
-                return{"success" : False, "message" : "Empty Cart", "data" : None}
+                raise EmptyCart("Your Cart Is Empty")
             total_amount = 0
             for cart_data in customer_cart:
                 total_amount += cart_data.total_price
@@ -115,11 +113,11 @@ class OrderService:
                 if not order_items:
                     delete_order = self.__orders_db.delete_order(order_data.order_id)
                     if delete_order:
-                        return{"success" : False, "message" : "Unable To Place Your Order", "data" : None}
+                        raise UnexpectedErrorAccuerd("Unable To Place Your Order Right Now")
                 else:
                     warehouse_id, delivery_time, inventory_id = self.__availabe_warehouse(cart_data.product_id, cart_data.qunatity)
                     if not warehouse_id:
-                        return{"success" : False, "message" : "Unable to Find a warehouse", "data" : None}
+                        raise NotFoundError("Unable To Find Warehouse Id")
                     delivery_date = self.excpected_delivery_date(delivery_time)
                     update_date = self.__order_items_db.update_order_items(order_items.id, delivery_date)
                     assign_warehouse = self.__order_items_db.assign_warehouse(order_items.id, warehouse_id)
@@ -128,51 +126,48 @@ class OrderService:
                         
             update_amount = self.__orders_db.update_status(order_data.order_id, "amount", total_amount)
             if update_amount:
-                return{"success" : True, "message" : f"Order Placed Successfuly, Order Id {order_data.order_id}", "data" : order_items} #adding hours in next time.....
-        except Exception as e:
-            return{"success" : False, "message" : f"Error{e}", "data" : None}
+                return order_items #adding hours in next time.....
         
-    def place_order(self) -> dict[str, Any]:
-        try:
+        
+    def place_order(self) -> object:
+
             customer = self.__customer_db.get_customer(self.customer_id)
             if customer.address.lower() == "not added":
-                return{"success" : False, "message" : "Unable To Place Your Order, Add Your Address", "data" : None}
+                raise NotFoundError("Your Address Is Not Added Yet")
             order = self.__save_order_details()
-            if order.get("success"):
+            if order:
                 delete_cart = self.__cart_db.delete_cart(self.customer_id)
                 if delete_cart:
                     return order
             else: 
                 return order
 
-        except Exception as e:
-            return{"success" : False, "message" : "Unable To Place Your Order", "data" : None}
             
-    def show_my_orders(self) -> dict[str, Any]:
+    def show_my_orders(self) -> object:
             order_data = self.__orders_db.get_customer_order(self.customer_id)
             if order_data:
-                return{"success" : True, "message" : "Data Fetched Successfuly", "data" : order_data}  
+                return order_data
             else:
-                return{"success" : False, "message" : "You haven't Placed any orders yet..", "data" : None}
+                return NotFoundError("Order Not founded")
     
-    def cancel_my_order(self, order_id : str) -> dict[str, Any]: ##we will need to modify this to get status in cancelled and dispatched
+    def cancel_my_order(self, order_id : str) -> str: ##we will need to modify this to get status in cancelled and dispatched
         order_data = self.__orders_db.get_order(order_id)
         if order_data.status.lower() == "order placed":
             cancelled_order = self.__orders_db.update_status(order_id, "status", "Cancelled")
             if not cancelled_order:
-                return{"success" : False, "message" : "Sorry We Can't Cancelled This Order", "data" : None}
+                raise UnexpectedErrorAccuerd("Unable To Cancel Your Order Right Now")
             cancelled_oi  = self.__order_items_db.update_status(order_id, "status", "Cancelled")
             if not cancelled_oi:
-                return{"success" : False, "message" : "Sorry We Can't Cancelled This Order", "data" : None}
+                raise UnexpectedErrorAccuerd("Unable To Cancel Your Order Right Now")
             order_items = self.__order_items_db.fetch_order_items(order_id)
             if order_items:
                 for data in order_items:
                     inv_id = self.__inventory_db.fetch_inventory(data.product_id, data.assigned_warehouse)
                     stock_data = self.__add_stock_data(inv_id, data.product_id, data.quantity)
                         
-                return{"success" : True, "message" : "Order cancelled Successfuly", "data" : None}
-            return{"success" : False, "message" : "Sorry We Can't Cancelled This Order", "data" : None}
-        return{"success" : False, "message" : "Sorry We Can't Cancelled This Order", "data" : None}
+                return order_id
+            raise UnexpectedErrorAccuerd("Unable To Cancel Your Order Right Now")
+        raise UnexpectedErrorAccuerd("Unable To Cancel Your Order Right Now")
                   
 
 

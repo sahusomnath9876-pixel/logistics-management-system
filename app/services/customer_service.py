@@ -1,18 +1,18 @@
-from app.repositories import CustomerRepo, UserRepo, WarehouseRepo, ProductsRepo
-from app.repositories import InventoryRepo, OrdersRepo, OItemsRepo, CartRepo, get_travel_data
-from typing import Any
+from app.repositories import CustomerRepo, UserRepo, ProductsRepo
+from app.repositories import InventoryRepo, CartRepo
+from app.exceptions import OutOfStock, ProductNotFound, UnexpectedErrorAccuerd, logger, EmptyCart
 
 
 
 
 class CustomerService:
-    def __init__(self, user_id : int):
+    def __init__(self, user_id : int, db):
         self.user_id = user_id
-        self.__user_db = UserRepo()
-        self.__customer_db = CustomerRepo()
-        self.__cart_db = CartRepo()
-        self.__products_db = ProductsRepo()
-        self.__inventory_db = InventoryRepo()
+        self.__user_db = UserRepo(db)
+        self.__customer_db = CustomerRepo(db)
+        self.__cart_db = CartRepo(db)
+        self.__products_db = ProductsRepo(db)
+        self.__inventory_db = InventoryRepo(db)
     
     
 
@@ -29,14 +29,14 @@ class CustomerService:
             else:
                 return None
 
-    def add_to_cart(self, product_id : int, quantity : int) -> str:
+    def add_to_cart(self, product_id : int, quantity : int) -> int:
         try:
             product_id = int(product_id)
             quantity = int(quantity)
 
             product_stock = self.__inventory_db.get_stock(product_id)
             if not product_stock:
-                return "Product Is Out Of Stock"
+                raise OutOfStock("Product Is Out Of Stock")
             product = self.__products_db.get_product(product_id)
             product_price = product.price
             total_price = quantity * product_price
@@ -45,26 +45,26 @@ class CustomerService:
                 customer_id = user.customer.customer_id
                 add_cart = self.__cart_db.add_cart(customer_id, product_id, quantity, total_price)
                 if add_cart:
-                    return "Product Added Successfuly"
+                    return product_id
                 else:
-                    return "Error Accured"
+                    return UnexpectedErrorAccuerd("Can't Add Product Right Now..")
             else:
-                return "Product Is Out Of Stock"
-        except TypeError:
-            return "Invalid Data Type"
-        except Exception:
-            return "Error"
+                raise OutOfStock("Product Is Out Of Stock")
+        except (TypeError, ValueError):
+            logger.exception("Invalid Data Type")
+            raise
 
-    def show_cart_data(self) -> dict[str, Any]:
+    def show_cart_data(self) -> object:
         user = self.__user_db.get_user("user_id", self.user_id)
         customer_id = user.customer.customer_id
         cart_data = self.__cart_db.get_cart(customer_id)
         if not cart_data:
-            return{"success" : False, "message" : "Empty Cart", "data" : None}
+            raise EmptyCart("Your Cart Is Empty")
+            
         else:
-            return{"success" : True, "message" : "Cart Data Fetched Successfuly", "data" : cart_data}
+            return cart_data
 
-    def remove_from_cart(self, id : int) -> dict[str, Any]:
+    def remove_from_cart(self, id : int) -> int:
         cart_data = self.show_cart_data()
         if cart_data.get("success"):
             cart = cart_data.get("data")
@@ -72,11 +72,11 @@ class CustomerService:
                 if data.id == id:
                     remove = self.__cart_db.remove_cart(id)
                     if remove:
-                        return{"success" : True, "message" : "Removed Successfuly", "data" : None}
+                        return id 
                     else:
-                        return{"success" : False, "message" : "Failed", "data" : None}
+                        raise UnexpectedErrorAccuerd("Can't Remove Right Now")
                 else:
-                    return{"success" : False, "message" : "Product is not there", "data" : None}
+                    raise ProductNotFound("Product Is Not There")
 
     
 

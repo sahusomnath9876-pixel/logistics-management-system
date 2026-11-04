@@ -1,12 +1,12 @@
 from app.models import Orders, OrderItems, Payments
-from app.database import SessionLocal
+
 from sqlalchemy import select
 from typing import Any
 
 
 class OrdersRepo:
-    def __init__(self):
-        self.__db = SessionLocal()
+    def __init__(self, db):
+        self.__db = db
         self.__order_db = Orders
 
     def create_order(self, **order : Any) -> object | None:
@@ -55,7 +55,7 @@ class OrdersRepo:
                 self.__db.rollback()
                 return None
             else:
-                return order_data.order_id
+                return order_data
     def delete_order(self, order_id : str) -> str | None:
         if order_id:
             try:
@@ -82,8 +82,8 @@ class OrdersRepo:
 #need to add delete if user deleted his id permenantly then we'will implement it later...
 
 class OItemsRepo:
-    def __init__(self):
-        self.__db = SessionLocal()
+    def __init__(self, db):
+        self.__db = db
         self.__order_items = OrderItems
 
     def create_order_items(self, **order_items : Any) -> object | None:
@@ -187,7 +187,7 @@ class OItemsRepo:
             if data:
                 data.current_status = new_status
                 self.__db.commit()
-                return id
+                return data
                 
         except Exception:
             self.__db.rollback()
@@ -196,8 +196,8 @@ class OItemsRepo:
 
 
 class PaymentsRepo:
-    def __init__(self):
-        self.__db = SessionLocal()
+    def __init__(self, db):
+        self.__db = db
         self.__pay_db = Payments
 
     def create_transaction(self, **pay_details : Any) -> object | None:

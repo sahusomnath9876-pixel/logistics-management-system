@@ -1,11 +1,15 @@
 from app.repositories import PaymentsRepo, OrdersRepo
 from datetime import datetime, date, time
 from typing import Any
+from app.exceptions import PaymentFailed, UnexpectedErrorAccuerd, logger, InvalidCerdiantials, NotFoundError
+
+
+
 class PaymentsService:
-    def __init__(self, customer_id):
+    def __init__(self, customer_id : int, db):
         self.customer_id = customer_id
-        self.__payments_db = PaymentsRepo()
-        self.__orders_db = OrdersRepo()
+        self.__payments_db = PaymentsRepo(db)
+        self.__orders_db = OrdersRepo(db)
 
     def __generate_transaction_id(self) -> str:
         now = datetime.now()
@@ -15,7 +19,7 @@ class PaymentsService:
         txn_id = letters + date_time
         return txn_id
 
-    def __make_transaction(self, order_id : str, amount : int, txn_method : str) -> dict[str, Any]:
+    def __make_transaction(self, order_id : str, amount : int, txn_method : str) -> object:
         try:
             order_id = str(order_id)
             amount = int(amount)
@@ -28,23 +32,24 @@ class PaymentsService:
                 txn_method= txn_method
             )
             if not new_transaction:
-                return{"success" : False, "message" : "Unable To Create Transaction", "data" : None}
+                raise UnexpectedErrorAccuerd("Unable To Create Transaction At This Moment")
             else:
-                return{"success" : True, "message" : "Transaction Created Successfuly", "data" : new_transaction.txn_id}
-        except TypeError:
-            return{"success" : False, "message" : "Invalid Data Type", "data" : None}
-        except Exception as e:
-            return{"success" : False, "message" : f"Error {e}", "data" : None}
+                return new_transaction
+        except (TypeError, ValueError):
+            logger.exception("Invalid Data Type")
+            raise
+
+          
         
-    def make_payment(self, order_id : str, total_amount : int, payment_method : str, cerdinatals : str) -> dict[str, Any]: # need to add upi and card logic and self amount getter
+    def make_payment(self, order_id : str, total_amount : int, payment_method : str, cerdinatals : str) -> object: # need to add upi and card logic and self amount getter
         try:
             pay_options = ["COD", "UPI", "CARD"]
             order_id = str(order_id)
             order = self.__orders_db.get_order(order_id) #order id must needed to exists
             if not order:
-                return{"success" : False, "message" : "Invalid Order Id", "data" : None}
+                raise InvalidCerdiantials("Invalid Order Id")
             if order.payment != "Not Paid":
-                return{"success" : False, "message" : "Already Paid", "data" : None}
+                raise InvalidCerdiantials("Already Paid")
             total_amount = int(total_amount)
             payment_method = str(payment_method).upper()
             cerdinatals = str(cerdinatals)
@@ -52,42 +57,42 @@ class PaymentsService:
                 if payment_method == "COD":
                     update_order = self.__orders_db.update_status(order_id, "payment", "Not Paid(COD)")
                     if not update_order:
-                        return{"success" : False, "message" : "Payment Failed", "data" : None}
-                    return{"success" : True, "message" : "Payment Successful", "data" : None}
+                        raise PaymentFailed("Payment Failed")
+                    return update_order
                 elif payment_method == "UPI":
                     supporitng_partners = ("@upi", "@ybl", "@api", "@apl")
                     if cerdinatals.endswith(supporitng_partners):
                         transaction = self.__make_transaction(order_id, total_amount, payment_method)
-                        if transaction.get("success"):
+                        if transaction:
                             update_order = self.__orders_db.update_status(order_id, "payment", "Paid")
                             if not update_order:
-                                delete_txn = self.__payments_db.delete_transaction(transaction.get("data"))
-                                return{"success" : False, "message" : "Payment Failed", "data" : None}
-                            return{"success" : True, "message" : "Payment Successful", "data" : transaction.get("data")}
+                                delete_txn = self.__payments_db.delete_transaction(transaction.txn_id)
+                                raise PaymentFailed("Payment Failed")
+                            return transaction
                         else:
-                            return{"success" : False, "message" : "Payment Failed", "data" : None}
+                            raise PaymentFailed("Payment Failed")
                     else:
-                        return{"success" : False, "message" : "Sorry We Can't Accept The UPI Id Now", "data" : None}
+                        raise InvalidCerdiantials("We are not acception this upi")
 
                 elif payment_method == "Card":
                     if len(cerdinatals) != 16:
-                        return{"success" : False, "message" : "Payment Failed, Invalid Card Number", "data" : None}
+                        raise InvalidCerdiantials("Invalid Card Number")
                     transaction = self.__make_transaction(order_id, total_amount, payment_method)
-                    if transaction.get("success"):
+                    if transaction:
                         update_order = self.__orders_db.update_status(order_id, "payment", "Paid")
                         if not update_order:
-                            delete_txn = self.__payments_db.delete_transaction(transaction.get("data"))
-                            return{"success" : False, "message" : "Payment Failed", "data" : None}
+                            delete_txn = self.__payments_db.delete_transaction(transaction.txn_id)
+                            raise PaymentFailed("Payment Failed")
 
-                        return{"success" : True, "message" : "Payment Successful", "data" : transaction.get("data")}
+                        return transaction
                     else:
-                        return{"success" : False, "message" : "Payment Failed", "data" : None}
+                        raise PaymentFailed("Payment Failed")
             else:
-                return{"success" : False, "message" : "Invalid Payment Options", "data" : None}
-        except TypeError:
-            return{"success" : False, "message" : "Invalid Data Type", "data" : None}
-        except Exception as e:
-            return{"success" : False, "message" : f"Error {e}", "data" : None}
+               raise InvalidCerdiantials("Invalid Paymnent Options")
+        except (TypeError, ValueError):
+            logger.exception("Invalid Data Type")
+            raise
+
             
                     
 

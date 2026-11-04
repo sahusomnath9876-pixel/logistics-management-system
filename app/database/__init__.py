@@ -1,2 +1,2 @@
 from .connection import db_engine
-from .session import SessionLocal
+from .session import SessionLocal, get_db

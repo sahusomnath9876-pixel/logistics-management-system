@@ -1,12 +1,12 @@
 from app.models import Users, DeliveryAgent
-from app.database import SessionLocal
+
 from sqlalchemy import select
 from typing import Any
 
 class UserRepo:
-    def __init__(self):
+    def __init__(self, db):
         self.__user_db = Users
-        self.__db = SessionLocal()
+        self.__db = db
 
 
     def get_user(self, get_type : str, type_data : Any) -> object | None:  #user can be get through his mobile number
@@ -81,8 +81,8 @@ class UserRepo:
 
 
 class AgentRepo:
-    def __init__(self):
-        self.__db = SessionLocal()
+    def __init__(self, db):
+        self.__db = db
         self.__agent = DeliveryAgent
 
     def get_agent(self, agent_id : int) -> object | None:

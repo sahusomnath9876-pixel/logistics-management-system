@@ -4,5 +4,5 @@ from app.services import PaymentsService
 def test_payments():
     payment = PaymentsService(10212)
 
-    pay = payment.make_payment("OD751313", 420000, "COD", "Cash On Delivery")
-    assert pay.get("success") is False #already paid
+    pay = payment.make_payment("OD561628", 140000, "UPI", "9709988944@ybl")
+    assert pay.order_id == "OD561628"

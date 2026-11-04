@@ -1,13 +1,12 @@
 from app.models import Customers, CustomerCart
-from app.database import SessionLocal
 from sqlalchemy import select
 from typing import Any
 
 
 class CustomerRepo:
-    def __init__(self):
+    def __init__(self, db):
         self.__cs_db = Customers
-        self.__db = SessionLocal()
+        self.__db = db
 
     def create_customer(self, **customer : Any) -> object | None:
         try:
@@ -77,9 +76,9 @@ class CustomerRepo:
 
     
 class CartRepo:
-    def __init__(self):
+    def __init__(self, db):
         self.__cart_db = CustomerCart
-        self.__db = SessionLocal()
+        self.__db = db
 
     def get_cart(self, customer_id : int) -> object | None:
         stmt = select(self.__cart_db).where(self.__cart_db.customer_id == customer_id)

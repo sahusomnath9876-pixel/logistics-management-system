@@ -9,9 +9,10 @@ def test_customer_services():
     assert produt_id == [1112, 1113]
 
     add_to_cart = customer.add_to_cart(1112, 1)
-    assert add_to_cart == "Product Added Successfuly"
+    assert add_to_cart == 1112
 
     cart_data = customer.show_cart_data()
-    assert cart_data.get("success") is True
+    for data in cart_data:
+        assert data.customer_id == 10212
 
 

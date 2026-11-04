@@ -1,27 +1,33 @@
 from app.repositories import UserRepo, CustomerRepo, AgentRepo, WarehouseRepo, ManagersRepo
 import bcrypt
 from typing import Any
+from app.exceptions import InvalidCerdiantials, NotFoundError, UnexpectedErrorAccuerd, AlreadyExistsError, logger
+import jwt
+import os
+from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException
 
+load_dotenv()
 
 class Authentication:
-    def __init__(self):
-        self.__user_db = UserRepo()
-        self.__customer_db = CustomerRepo()
-        self.__manager_db = ManagersRepo()
-        self.__agent_db = AgentRepo()
-        self.__warehouse_db = WarehouseRepo()
+    def __init__(self, db):
+        self.__user_db = UserRepo(db)
+        self.__customer_db = CustomerRepo(db)
+        self.__manager_db = ManagersRepo(db)
+        self.__agent_db = AgentRepo(db)
+        self.__warehouse_db = WarehouseRepo(db)
 
 
-    def user_signUp(self, name : str, mobile_no : str, password : str, city : str) -> dict[str, Any]:
-            if not (name and mobile_no and password and city):
-                return{"success" : False, "message" : "User Alreday Exists", "user" : None}
+    def user_signUp(self, name : str, mobile_no : str, password : str, city : str) -> object:
     
             try:
                 
                 name = str(name).title()
                 mobile_no = str(mobile_no)
                 if len(mobile_no) != 10:
-                    return{"success" : False, "message" : "Invalid Mobile Number Length", "user" : None}                    
+                    raise InvalidCerdiantials("Invalid Mobile Number")                    
                 password = str(password)
                 #as of now we only support customer registration deliovery agent and warehouse manager will added as soon as possible
 
@@ -40,36 +46,32 @@ class Authentication:
                         create_customer = self.__customer_db.add_customer(user_data.user_id, city)
                         if not create_customer:
                             delete_user = self.__user_db.delete_user(user_data.user_id)
-                            return{"success" : False, "message" : "Error", "user" : None}
+                            raise UnexpectedErrorAccuerd("Unable To Complete This SignUp")
                         else:
-                            return{"success" : True, "message" : "Registerd Successfuly", "user" : user_data.user_id}
+                            return user_data
                     
 
                     else:
-                        return{"success" : False, "message" : "Error", "user" : None}
+                        raise UnexpectedErrorAccuerd("Unable To Complete This SignUP ")
                 else:
-                    return{"success" : False, "message" : "User Alreday Exists", "user" : None}
+                    raise AlreadyExistsError("User Already Exists")
                     
-            except TypeError:
-                return{"success" : False, "message" : "Invalid Data Type", "user" : None}
-            except Exception as e:
-                return{"success" : False, "message" : f"Error{e}", "user" : None}
+            except (TypeError, ValueError):
+                logger.exception("Invalid Data Type")
+                raise                          
                 
-    def agent_signUp(self, name : str, mobile_no : str, password : str, wearehouse_id : int, vehicle_no : str) -> dict[str, Any]: #warehouse_must need to accept this for acess registration
-            if not (name and mobile_no and password and wearehouse_id and vehicle_no):
-                return{"success" : False, "message" : "Fields Required", "user" : None}
-    
+    def agent_signUp(self, name : str, mobile_no : str, password : str, wearehouse_id : int, vehicle_no : str) -> object: #warehouse_must need to accept this for acess registration
             try:
                 
                 name = str(name).title()
                 mobile_no = str(mobile_no)
                 if len(mobile_no) != 10:
-                    return{"success" : False, "message" : "Invalid Mobile Number Length", "user" : None}                    
+                    raise InvalidCerdiantials("Invalid Mobile Number")                   
                 password = str(password)
                 wearehouse_id = int(wearehouse_id)
                 warehouse_data = self.__warehouse_db.get_warehouse(wearehouse_id)
                 if not warehouse_data: 
-                    return{"success" : False, "message" : "Invalid Warehouse Id", "user" : None}             
+                    raise NotFoundError("Invalid Warehouse Id")
                 vehicle_no = str(vehicle_no)
 
                 hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode()
@@ -88,30 +90,27 @@ class Authentication:
                         create_agent = self.__agent_db.add_agent(user_data.user_id, wearehouse_id, vehicle_no)
                         if not create_agent:
                             delete_user = self.__user_db.delete_user(user_data.user_id)
-                            return{"success" : False, "message" : "Error", "user" : None}                           
+                            raise UnexpectedErrorAccuerd("Unbale To SignUp At This Moment..")                          
                         else:
-                            return{"success" : True, "message" : "Registerd Successfuly", "user" : user_data.user_id}
+                            return user_data
                     
 
                     else:
-                        return{"success" : False, "message" : "Error", "user" : None}
+                        raise UnexpectedErrorAccuerd("Unbale To SignUp At This Moment..")
                 else:
-                    return{"success" : False, "message" : "User Alreday Exists", "user" : None}
+                    raise AlreadyExistsError("User Already Exists")
                     
-            except TypeError:
-                return{"success" : False, "message" : "Invalid Data Type", "user" : None}
-            except Exception as e:
-                return{"success" : False, "message" : f"Error{e}", "user" : None}
+            except (TypeError, ValueError):
+                logger.exception("Invalid Data Type")
+                raise
 
-    def manager_signUP(self, name : str, mobile_no : str, password : str, wearehouse_id : int, manager_id : int) -> dict[str, Any]:
-        if not (name and mobile_no and password and wearehouse_id and manager_id):
-            return{"success" : False, "message" : "Fields Required", "user" : None}
+    def manager_signUP(self, name : str, mobile_no : str, password : str, wearehouse_id : int, manager_id : int) -> object:
 
         try:
             name = str(name)
             mobile_no = str(mobile_no)
             if len(mobile_no) != 10:
-                return{"success" : False, "message" : "Invalid Mobile No Length", "user" : None}
+                raise InvalidCerdiantials("Invalid Mobile Number") 
             password = str(password)
             wearehouse_id = int(wearehouse_id)
             manager_id = int(manager_id)
@@ -129,45 +128,78 @@ class Authentication:
                     )
                     if create_user:
                         user_data = self.__user_db.get_user("mobile_no", mobile_no)
-                        manager = self.manager_db.add_manager(manager_id, wearehouse_id, user_data.user_id)
+                        manager = self.__manager_db.add_manager(manager_id, wearehouse_id, user_data.user_id)
                         if not manager:
                             delete_user = self.__user_db.delete_user(user_data.user_id)
-                            return{"success" : False, "message" : "Error", "user" : None}
+                            raise UnexpectedErrorAccuerd("Unbale To SignUp At This Moment..")
                         else:
-                            return{"success" : True, "message" : "Registerd Successfuly", "user" : user_data.user_id}
+                            return user_data
                     else:
-                        return{"success" : False, "message" : "Error", "user" : None}
+                        raise UnexpectedErrorAccuerd("Unbale To SignUp At This Moment..")
                 else:
-                    return{"success" : False, "message" : "Invalid Manger or Warehouse Id", "user" : None}
+                    raise InvalidCerdiantials("Invalid Warehouse Id or Manager Id") 
             else:
-                return{"success" : False, "message" : "User Already Exists", "user" : None}
-        except TypeError:
-            return{"success" : False, "message" : "Invalid Data Type", "user" : None}
-        except Exception as e:
-            return{"success" : False, "message" : f"Error{e}", "user" : None}
+                raise AlreadyExistsError("User Already Exists")
+        except (TypeError, ValueError):
+            logger.exception("Invalid Data Type")
+            raise
 
-    def signIN(self, mobile_no : str, password : str) -> dict[str, Any]:
-        if not (mobile_no and password):
-            return{"success" : False, "message" : "Fields Required", "user" : None}
+    def signIN(self, mobile_no : str, password : str) -> object:
         try:
             mobile_no = str(mobile_no)
             if len(mobile_no) != 10:
-                return{"success" : False, "message" : "Invalid Mobile Number Length", "user" : None}
+                raise InvalidCerdiantials("Invalid Mobile Number") 
             auth_type = "mobile_no"
             user_data = self.__user_db.get_user(auth_type, mobile_no)
             if not user_data:
-                return{"success" : False, "message" : "User Not Exists", "user" : None}
+                raise NotFoundError("User Not Exists Or Invalid Mobile No.")
                 
             hashed_password = user_data.password
 
             if bcrypt.checkpw(password.encode(), hashed_password.encode("utf-8")):
-                return{"success" : True, "message" : "SignIN Successfuly", "user" : user_data}
+                return user_data
             else:
-                return{"success" : False, "message" : "Invalid Password", "user" : None}
-        except TypeError:
-            return{"success" : False, "message" : "Invalid Data Type", "user" : None}
-        except Exception as e:
-            return{"success" : False, "message" : f"Error{e}", "user" : None}
+                raise InvalidCerdiantials("Invalid Password")
+            
+        except (TypeError, ValueError):
+            logger.exception("Invalid Data Type")
+            raise
             
 
-                           
+    def create_auth_token(self, user : object):
+        expiry_time = datetime.now(timezone.utc) + timedelta(minutes=10)
+        payload = {
+            "sub" : "Authentication",
+            "user_id" : user.user_id,
+            "role" : user.role,
+            "exp" : expiry_time
+        }
+
+        token = jwt.encode(
+            payload,
+            os.getenv("SECRET_KEY"),
+            os.getenv("ALGORITHAM")
+        )
+        return token
+
+
+Oauth2_password = OAuth2PasswordBearer("/auth/signin")
+def verify_token(current_user = Depends(Oauth2_password)):
+    payload = jwt.decode(
+        current_user,
+        os.getenv("SECRET_KEY"),
+        os.getenv("ALGORITHAM")        
+    )
+    return payload
+
+
+def verify_role(role : str):
+    def check_user(user = Depends(verify_token)):
+        if user.get("role") != role:
+            raise HTTPException(
+                status_code=401,
+                detail="Unauthorized"
+            )
+        return user
+        
+    return check_user                  

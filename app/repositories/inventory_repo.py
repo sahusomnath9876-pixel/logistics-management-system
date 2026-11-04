@@ -1,12 +1,12 @@
 from app.models import Products, Inventory, Warehouse, Managers
-from app.database import SessionLocal
+
 from sqlalchemy import select
 from typing import Any
 
 
 class ProductsRepo:
-    def __init__(self):
-        self.__db = SessionLocal()
+    def __init__(self, db):
+        self.__db = db
         self.__products = Products
 
     def get_product(self, product_id : int) -> object | None:
@@ -73,8 +73,8 @@ class ProductsRepo:
 
 
 class InventoryRepo:
-    def __init__(self):
-        self.__db = SessionLocal()
+    def __init__(self, db):
+        self.__db = db
         self.__inventory = Inventory
 
     def get_inventory(self, id):
@@ -151,15 +151,15 @@ class InventoryRepo:
             self.__db.rollback()
             return None
         else:
-            return stock_data.stock
+            return stock_data
 
 
     #stock deletatuon coming as soon as possible
 
 
 class WarehouseRepo:
-    def __init__(self):
-        self.__db = SessionLocal()
+    def __init__(self, db):
+        self.__db = db
         self.__warehouse = Warehouse
 
     def get_warehouse(self, warehouse_id):
@@ -196,8 +196,8 @@ class WarehouseRepo:
             return new_manager_id
 
 class ManagersRepo:
-    def __init__(self):
-        self.db = SessionLocal()
+    def __init__(self, db):
+        self.db = db
         self.manager_db = Managers
 
     def create_manager(self, **manger_details):
