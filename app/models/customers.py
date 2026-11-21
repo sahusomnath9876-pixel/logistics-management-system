@@ -65,7 +65,7 @@ class CustomerCart(Base):
     id : Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     customer_id : Mapped[int] = mapped_column(ForeignKey("customers.customer_id"))
     product_id : Mapped[int] = mapped_column(Integer, nullable=False)
-    qunatity : Mapped[int] = mapped_column(Integer, nullable=False)
+    quantity : Mapped[int] = mapped_column(Integer, nullable=False)
     total_price : Mapped[int] = mapped_column(Integer, nullable=False)
 
     customer : Mapped["Customers"] = relationship(back_populates="carts")

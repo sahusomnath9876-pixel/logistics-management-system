@@ -32,25 +32,28 @@ class CustomerRepo:
         else:
             return customer_data
 
-    def update_customer(self, customer_id : int, column_name : str, new_data : str) -> str | None:
+    def update_customer(self, customer_id : int, column_name : str, new_data : str) -> object | None:
         if customer_id:
             try:
-                custome_data = self.get_customer(customer_id)
-                if custome_data:
+                customer_data = self.get_customer(customer_id)
+                if not customer_data:
+                    return None
 
-                    if column_name.lower() == "address":
-                        self.__cs_db.address = new_data
-                        self.__db.commit()
-                    elif column_name.lower() == "city":
-                        self.__cs_db.city = new_data
-                        self.__db.commit()
+                column_name = column_name.lower()
+                if column_name == "address":
+                    customer_data.address = str(new_data).strip()
+                elif column_name == "city":
+                    customer_data.city = str(new_data).strip()
+                else:
+                    return None
 
-
+                self.__db.commit()
+                self.__db.refresh(customer_data)
+                return customer_data
             except Exception:
                 self.__db.rollback()
                 return None
-            else:
-                return column_name
+        return None
 
     def delete_customer(self, customer_id : int) -> int | None:
         if customer_id:
@@ -93,12 +96,12 @@ class CartRepo:
                 data.product_id
 
 
-    def add_cart(self, customer_id : int, product_id : int, qunatity : int, total_price : int) -> int | None:
+    def add_cart(self, customer_id : int, product_id : int, quantity : int, total_price : int) -> int | None:
         try:
             new_cart = self.__cart_db(
                 customer_id= customer_id,
                 product_id= product_id,
-                qunatity= qunatity,
+                quantity= quantity,
                 total_price= total_price
             )
             self.__db.add(new_cart)

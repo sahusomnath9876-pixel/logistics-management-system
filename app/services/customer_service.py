@@ -1,6 +1,7 @@
 from app.repositories import CustomerRepo, UserRepo, ProductsRepo
 from app.repositories import InventoryRepo, CartRepo
-from app.exceptions import OutOfStock, ProductNotFound, UnexpectedErrorAccuerd, logger, EmptyCart
+from app.exceptions import OutOfStock, ProductNotFound, UnexpectedErrorAccuerd, logger, EmptyCart, NotFoundError
+from typing import Any
 
 
 
@@ -66,8 +67,8 @@ class CustomerService:
 
     def remove_from_cart(self, id : int) -> int:
         cart_data = self.show_cart_data()
-        if cart_data.get("success"):
-            cart = cart_data.get("data")
+        if cart_data:
+            cart = cart_data
             for data in cart:
                 if data.id == id:
                     remove = self.__cart_db.remove_cart(id)
@@ -79,7 +80,18 @@ class CustomerService:
                     raise ProductNotFound("Product Is Not There")
 
     
+    def get_customer(self):
+        user_data = self.__user_db.get_user("user_id", self.user_id)
+        if not user_data:
+            raise NotFoundError
+        customer_data = user_data.customer
+        return user_data, customer_data
 
+    def update_customer_details(self, customer_id : int, column : str, new_data : Any) -> object:
+        update_customer = self.__customer_db.update_customer(customer_id, column, new_data)
+        if not update_customer:
+            raise UnexpectedErrorAccuerd("Can't Update Customer Details As Of Now")
+        return update_customer
 
             
         

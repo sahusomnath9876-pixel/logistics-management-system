@@ -1,229 +1,195 @@
-# Logistics Management System
+# SuperCart Logistics Management System
 
-A backend-focused Logistics Management System built with Python, MySQL,
-SQLAlchemy, and a layered architecture.
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-database-4479A1?logo=mysql&logoColor=white)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-ORM-D71F00)
+![License](https://img.shields.io/badge/license-learning%20project-lightgrey)
 
-The project was designed to practice real-world backend development
-concepts such as authentication, business logic separation, database
-operations, repository/service architecture, transaction handling, and
-automated testing.
+SuperCart is a full-stack logistics and e-commerce project built with
+Python, FastAPI, MySQL, SQLAlchemy, and a lightweight HTML frontend. It
+connects the complete customer shopping journey with warehouse operations:
+customers can discover products, manage a cart, place and pay for orders,
+while managers manage inventory and update order statuses from a dedicated
+portal.
 
-## Features
+## Highlights
 
--   User authentication and password hashing
--   Role-based access control
--   Customer management
--   Product management
--   Inventory management
--   Warehouse management
--   Order management
--   Payment management
--   Delivery-time calculation
--   MySQL database integration
--   SQLAlchemy ORM
--   Environment-based configuration
--   Automated tests with pytest
--   Repository and service layer separation
--   Error handling and database transaction management
+- Customer storefront with product browsing, search, product images, and
+  responsive layouts
+- Customer registration, sign-in, JWT-based authentication, and role-based
+  access control
+- Cart management with add, view, and remove operations
+- Checkout with card, UPI, and cash-on-delivery payment options
+- Automatic order creation, stock updates, delivery-time calculation, and
+  order confirmation
+- Customer account profile updates and order history
+- Order details, status filtering, cancellation, and product imagery
+- Warehouse manager dashboard with operational statistics
+- Inventory viewing, stock additions, and product catalogue management
+- Product creation with image URLs and product detail updates
+- Pending-order review and status updates from the manager portal
+- SQLAlchemy repository/service architecture with centralized exception
+  handling
+- Interactive FastAPI documentation at `/docs`
+
+## Product Experience
+
+### Customer storefront
+
+The customer experience is implemented as a set of static pages in
+[`frontend/`](<./frontend/>):
+
+- `login.html` — customer and manager sign-in and customer registration
+- `index.html` — product catalogue, search, cart, and account navigation
+- `account.html` — profile details and account updates
+- `payments.html` — cart review, delivery address, and payment selection
+- `orders.html` — order history, filtering, details, and cancellation
+
+### Warehouse manager portal
+
+Managers use [`manager.html`](<./frontend/manager.html>) to:
+
+- Review pending orders assigned to their warehouse
+- View inventory quantities and product catalogue data
+- Add products and initial stock
+- Add stock to existing inventory
+- Update product details and images
+- Change order status as fulfilment progresses
+
+## Screenshots
+
+### Customer shopping flow
+
+<p align="center">
+  <img src="assets/readme_images/homepage.png" alt="SuperCart customer storefront" width="48%">
+  <img src="assets/readme_images/homepage_cart.png" alt="SuperCart shopping cart" width="48%">
+</p>
+<p align="center">
+  <img src="assets/readme_images/login_page.png" alt="SuperCart login and registration page" width="48%">
+  <img src="assets/readme_images/checkout.png" alt="SuperCart checkout page" width="48%">
+</p>
+<p align="center">
+  <img src="assets/readme_images/order_confirmation.png" alt="SuperCart order confirmation" width="48%">
+  <img src="assets/readme_images/my_orders.png" alt="SuperCart order history" width="48%">
+</p>
+
+### Warehouse operations
+
+<p align="center">
+  <img src="assets/readme_images/warehouse_manager_dashboard.png" alt="Warehouse manager dashboard" width="48%">
+  <img src="assets/readme_images/manger_products.png" alt="Warehouse product management" width="48%">
+</p>
 
 ## Architecture
 
-The project follows a layered backend architecture:
+The backend follows a layered architecture that keeps HTTP handling,
+business rules, and persistence responsibilities separate:
 
-``` text
-Client / Main Program
-        ↓
-     Services
-        ↓
-   Repositories
-        ↓
-     Models
-        ↓
- SQLAlchemy / MySQL
+```text
+Browser / Frontend
+        |
+        v
+FastAPI Routers
+        |
+        v
+Services
+        |
+        v
+Repositories
+        |
+        v
+SQLAlchemy Models
+        |
+        v
+MySQL
 ```
 
-### Main Layers
+### Backend layers
 
-**Services**
+- `app/routers/` — authentication, customer, product, and warehouse API
+  routes
+- `app/services/` — authentication, customer, order, payment, product, and
+  warehouse business logic
+- `app/repositories/` — database access and query operations
+- `app/models/` — SQLAlchemy models for users, customers, products,
+  inventory, orders, and payments
+- `app/schemas/` — Pydantic request and response schemas
+- `app/database/` — engine configuration and database sessions
+- `app/exceptions/` — application exceptions and FastAPI exception handlers
 
-Contains business logic and coordinates application operations.
+## API Overview
 
-``` text
-app/services/
-├── auth_service.py
-├── customer_service.py
-├── order_service.py
-├── payment_service.py
-├── product_service.py
-└── warehouse_services.py
-```
+All routes are served by the FastAPI application in [`main.py`](<./main.py>).
+Protected routes require a bearer token returned by `/auth/signin`.
 
-**Repositories**
+| Area | Example endpoints | Access |
+| --- | --- | --- |
+| Authentication | `POST /auth/signin`, `POST /auth/signup/customer`, `POST /auth/signup/manager` | Public |
+| Products | `GET /products/all`, `GET /products/images` | Public |
+| Customer | `GET /customer/search`, `POST /customer/cart/add`, `POST /customer/order/place` | Customer |
+| Orders | `GET /customer/order/view`, `GET /customer/order/{order_id}`, `DELETE /customer/order/delete` | Customer |
+| Warehouse | `GET /warehouse/product/view`, `POST /warehouse/product/add` | Manager |
+| Fulfilment | `GET /warehouse/orders/pending`, `PATCH /warehouse/orders/status/update` | Manager |
 
-Handles database-related operations and keeps database access separate
-from business logic.
+After starting the backend, open
+[`http://127.0.0.1:8000/docs`](http://127.0.0.1:8000/docs) for the complete
+interactive API reference.
 
-``` text
-app/repositories/
-├── customer_repo.py
-├── delivery_time.py
-├── inventory_repo.py
-├── orders_repo.py
-└── user_repo.py
-```
+## Technology Stack
 
-**Models**
+- **Backend:** Python, FastAPI, Uvicorn
+- **Database:** MySQL
+- **ORM and driver:** SQLAlchemy, PyMySQL
+- **Validation:** Pydantic
+- **Authentication:** JWT bearer tokens, bcrypt password hashing
+- **Frontend:** HTML, JavaScript, Tailwind CSS via CDN
+- **Location and delivery:** geopy and requests
+- **Testing:** pytest
 
-Contains SQLAlchemy database models representing the application's data
-structures.
+## Getting Started
 
-**Database**
+### Prerequisites
 
-Contains database connection and session management.
-
-**Tests**
-
-Contains automated tests for the application's major services and
-workflows.
-
-## Project Structure
-
-``` text
-Logistics Management Project/
-│
-├── app/
-│   ├── database/
-│   ├── models/
-│   ├── repositories/
-│   │   ├── customer_repo.py
-│   │   ├── delivery_time.py
-│   │   ├── inventory_repo.py
-│   │   ├── orders_repo.py
-│   │   └── user_repo.py
-│   │
-│   └── services/
-│       ├── auth_service.py
-│       ├── customer_service.py
-│       ├── order_service.py
-│       ├── payment_service.py
-│       ├── product_service.py
-│       └── warehouse_services.py
-│
-├── tests/
-│   ├── test_auth.py
-│   ├── test_customer.py
-│   ├── test_order.py
-│   ├── test_payment.py
-│   ├── test_product.py
-│   └── test_warehouse.py
-│
-├── .env
-├── .gitignore
-├── development_plans.txt
-└── requirements.txt
-```
-
-## Technologies Used
-
--   **Python** --- application and business logic
--   **MySQL** --- relational database
--   **SQLAlchemy** --- ORM and database interaction
--   **PyMySQL** --- MySQL database driver
--   **bcrypt** --- password hashing
--   **python-dotenv** --- environment variable management
--   **geopy** --- geocoding and location-related functionality
--   **requests** --- HTTP/API requests
--   **pytest** --- automated testing
-
-## Authentication
-
-The authentication system uses password hashing with `bcrypt`.
-
-The general authentication flow is:
-
-``` text
-User Credentials
-       ↓
-Authentication Service
-       ↓
-Password Verification
-       ↓
-User / Role Validation
-       ↓
-Authorized Operation
-```
-
-Passwords are not stored as plain text.
-
-## Testing
-
-The project uses `pytest` for automated testing.
-
-Test modules cover major application areas:
-
-``` text
-tests/
-├── test_auth.py
-├── test_customer.py
-├── test_order.py
-├── test_payment.py
-├── test_product.py
-└── test_warehouse.py
-```
-
-Run the complete test suite:
-
-``` bash
-python -m pytest -v
-```
-
-Run a specific test file:
-
-``` bash
-python -m pytest tests/test_auth.py -v
-```
-
-For example:
-
-``` bash
-python -m pytest tests/test_customer.py -v
-```
-
-## Installation
+- Python 3.13 or a compatible modern Python release
+- MySQL Server
+- Git
 
 ### 1. Clone the repository
 
-``` bash
+```bash
 git clone <YOUR_GITHUB_REPOSITORY_URL>
 cd "Logistics Management Project"
 ```
 
-### 2. Create a virtual environment
+### 2. Create and activate a virtual environment
 
-``` bash
+Windows PowerShell:
+
+```powershell
 python -m venv venv
+.\venv\Scripts\Activate.ps1
 ```
 
-Activate it on Windows:
+macOS or Linux:
 
-``` bash
-venv\Scripts\activate
+```bash
+python -m venv venv
+source venv/bin/activate
 ```
 
 ### 3. Install dependencies
 
-``` bash
+```bash
 python -m pip install -r requirements.txt
 ```
 
-### 4. Configure the database
+### 4. Configure MySQL
 
-Create a MySQL database and configure the required database credentials
-in a `.env` file.
+Create a MySQL database, then copy `.env.example` to `.env` and set the
+credentials for your local database:
 
-Example:
-
-``` env
+```env
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=your_username
@@ -231,80 +197,99 @@ DB_PASSWORD=your_password
 DB_NAME=your_database
 ```
 
-Use the variable names expected by the project's database configuration.
+Keep `.env` private. It is ignored by Git and must not be committed.
 
-### 5. Run the application
+### 5. Start the API
 
-``` bash
-python main.py
+```bash
+uvicorn main:app --reload
 ```
 
-## Environment Variables
+The API is now available at `http://127.0.0.1:8000`.
 
-Sensitive configuration should be stored in `.env` and should not be
-committed to GitHub.
+### 6. Start the frontend
 
-A `.env.example` file can be used to show the required configuration
-without exposing real credentials.
+In a second terminal, serve the static frontend from the project root:
 
-Example:
-
-``` env
-DB_HOST=
-DB_PORT=
-DB_USER=
-DB_PASSWORD=
-DB_NAME=
+```bash
+cd frontend
+python -m http.server 5500
 ```
 
-## What I Learned From This Project
+Open [http://127.0.0.1:5500/index.html](http://127.0.0.1:5500/index.html) in
+your browser. The frontend is configured to call the API at
+`http://127.0.0.1:8000`.
 
-This project was built as a practical backend development project rather
-than only as a collection of tutorials.
+> The API enables CORS for local development. For production, replace the
+> permissive CORS configuration in `main.py` with the deployed frontend
+> origin.
 
-Key concepts practiced include:
+## Testing
 
--   Object-oriented Python
--   Layered application architecture
--   Repository pattern
--   Service layer design
--   SQLAlchemy ORM
--   MySQL database design
--   Authentication and authorization
--   Password hashing
--   Environment variables
--   Database transactions
--   Exception handling
--   External API usage
--   Automated testing with pytest
--   Project organization and separation of concerns
+Run the complete test suite:
 
-## Future Improvements
+```bash
+python -m pytest -v
+```
 
-Possible future improvements include:
+Run a focused test module:
 
--   REST API using FastAPI
--   Frontend interface
--   Advanced order tracking
--   Delivery-agent management
--   Notifications
--   Improved reporting and analytics
--   Deployment to a cloud platform
+```bash
+python -m pytest tests/test_order.py -v
+```
 
-> FastAPI is intentionally not part of the current version. It is being
-> explored separately in a dedicated API project so that this project
-> remains focused on its original backend architecture.
+The test suite covers authentication, customer operations, products, orders,
+payments, and warehouse workflows.
+
+## Project Structure
+
+```text
+Logistics Management Project/
+├── app/
+│   ├── database/
+│   ├── exceptions/
+│   ├── models/
+│   ├── repositories/
+│   ├── routers/
+│   ├── schemas/
+│   └── services/
+├── assets/
+│   ├── product_images/
+│   └── readme_images/
+├── frontend/
+│   ├── account.html
+│   ├── index.html
+│   ├── login.html
+│   ├── manager.html
+│   ├── orders.html
+│   └── payments.html
+├── tests/
+├── .env.example
+├── main.py
+├── README.md
+└── requirements.txt
+```
 
 ## Project Status
 
-**Completed --- Version 1**
+**Active learning project — Version 2**
 
-The core backend functionality, database integration, service/repository
-architecture, authentication, and automated tests have been implemented.
+The project has evolved from a service-oriented backend into a working
+logistics and shopping experience with a FastAPI API, customer-facing
+frontend, product imagery, checkout flows, and warehouse management tools.
+
+## Roadmap
+
+- Add automated API integration tests
+- Add database migrations and seed data
+- Move frontend assets into a production build pipeline
+- Add delivery-agent accounts and route tracking
+- Add notifications and reporting dashboards
+- Add deployment configuration for a cloud environment
 
 ## Author
 
 **Somnath Sahu**
 
-This project was created as part of my journey toward becoming a
-professional Python backend developer.
+Built as part of a journey toward professional Python backend and
+full-stack development.

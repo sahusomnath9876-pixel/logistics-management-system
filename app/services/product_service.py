@@ -1,5 +1,5 @@
-from app.repositories import WarehouseRepo, ProductsRepo
-from app.repositories import InventoryRepo, ManagersRepo
+from app.repositories import WarehouseRepo, ProductsRepo, ImagesRepo
+from app.repositories import InventoryRepo
 from typing import Any
 from app.exceptions import InvalidCerdiantials, NotFoundError, UnexpectedErrorAccuerd, logger
 
@@ -8,6 +8,7 @@ class ProductsService:
         self.__products_db = ProductsRepo(db)
         self.__inventory_db = InventoryRepo(db)
         self.__warehouse_db = WarehouseRepo(db)
+        self.__products_images = ImagesRepo(db)
 
 
     def add_products(self, p_name : str, category : str, weight : str, price : int, warehouse_id : int) -> object :
@@ -36,7 +37,7 @@ class ProductsService:
             if not add_inv:
                 delete_product= self.__products_db.delete_product(add_product.product_id)
                 raise UnexpectedErrorAccuerd("Error While Adding Your Products")
-            return add_product
+            return add_product, add_inv
         except (TypeError, ValueError):
             logger.exception("Invalid Data Type")
             raise
@@ -99,3 +100,32 @@ class ProductsService:
             raise
 
 
+    def show_product_info(self, product_id : int) -> object:
+        product_data = self.__products_db.get_product(product_id)
+        return product_data
+
+    def get_all_products_data(self):
+        products_data = self.__products_db.get_all_products()
+        if not products_data:
+            raise UnexpectedErrorAccuerd("Unable To Get All Products")
+        return products_data
+
+
+    def add_products_images(self, product_id : int, image_url : str) -> object:
+        product_images = self.__products_images.add_image(product_id, image_url)
+        if not product_images:
+            raise UnexpectedErrorAccuerd("Unable To Add Product Image Right Now")
+        return product_images
+
+    def get_images(self, product_id : int)-> object:
+        products = self.__products_images.get_product_image(product_id)
+        if not products:
+            raise NotFoundError("Unable To Load Product with Images")
+        else:
+            return products
+
+
+
+       
+
+    

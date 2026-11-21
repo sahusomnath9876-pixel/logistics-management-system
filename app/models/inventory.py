@@ -19,6 +19,7 @@ class Products(Base): #product schema needs to redifined.....
 
     inventory : Mapped[list["Inventory"]] = relationship(back_populates="product")
     order_items : Mapped[list["OrderItems"]] = relationship(back_populates="products")
+    images : Mapped[list["ProductsImages"]] = relationship(back_populates="products")
 
 class Inventory(Base):
     __tablename__ = "inventory"
@@ -55,3 +56,13 @@ class Managers(Base):
 
     warehouse : Mapped["Warehouse"] = relationship(back_populates="manager")
     user : Mapped["Users"] = relationship(back_populates="manager")
+
+
+class ProductsImages(Base):
+    __tablename__ = "products_images"
+
+    img_id : Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    product_id : Mapped[int] = mapped_column(ForeignKey("products.product_id"))
+    image_url : Mapped[str] = mapped_column(String(300), nullable=False)
+
+    products : Mapped["Products"] = relationship(back_populates="images")

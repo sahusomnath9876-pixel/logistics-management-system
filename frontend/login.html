@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sign in to your SuperCart account">
+    <title>Sign In | SuperCart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f7f7f5;
+        }
+
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .login-panel {
+            background:
+                linear-gradient(135deg, rgba(17, 24, 39, 0.96), rgba(31, 41, 55, 0.86)),
+                radial-gradient(circle at 20% 20%, #4b5563, transparent 45%);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-900 antialiased">
+    <main class="min-h-screen grid lg:grid-cols-2">
+        <section class="login-panel hidden lg:flex flex-col justify-between p-12 xl:p-20 text-white">
+            <a href="index.html" class="inline-flex items-center gap-3 w-fit" aria-label="SuperCart home">
+                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <path d="M3 6h18M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+                <span class="font-serif text-3xl tracking-widest uppercase">
+                    Super<span class="font-light italic text-gray-400">Cart</span>
+                </span>
+            </a>
+
+            <div class="max-w-md">
+                <p class="mb-5 text-xs font-medium uppercase tracking-[0.3em] text-gray-400">Welcome back</p>
+                <h1 class="font-serif text-5xl leading-tight xl:text-6xl">Everything you love, in one place.</h1>
+                <p class="mt-6 text-base font-light leading-7 text-gray-300">
+                    Sign in to explore thoughtfully selected essentials and keep track of your orders.
+                </p>
+            </div>
+
+            <p class="text-xs text-gray-400">&copy; 2026 SuperCart. All rights reserved.</p>
+        </section>
+
+        <section class="flex items-center justify-center px-6 py-12 sm:px-10">
+            <div class="w-full max-w-md">
+                <a href="index.html" class="mb-12 inline-flex items-center gap-2 text-gray-900 lg:hidden" aria-label="SuperCart home">
+                    <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <path d="M3 6h18M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                    <span class="font-serif text-2xl tracking-widest uppercase">
+                        Super<span class="font-light italic text-gray-400">Cart</span>
+                    </span>
+                </a>
+
+                <div class="mb-10">
+                    <p class="mb-3 text-xs font-medium uppercase tracking-[0.25em] text-gray-500">Your account</p>
+                    <h2 class="font-serif text-4xl text-gray-900">Sign in</h2>
+                    <p class="mt-3 text-sm text-gray-500">Use your registered mobile number to continue.</p>
+                </div>
+
+                <form id="loginForm" class="space-y-6" novalidate>
+                    <div>
+                        <label for="mobileNumber" class="mb-2 block text-sm font-medium text-gray-700">Mobile number</label>
+                        <input
+                            id="mobileNumber"
+                            name="mobileNumber"
+                            type="tel"
+                            inputmode="numeric"
+                            autocomplete="username"
+                            maxlength="10"
+                            pattern="[0-9]{10}"
+                            placeholder="10-digit mobile number"
+                            required
+                            class="w-full border-0 border-b border-gray-300 bg-transparent px-0 py-3 text-base outline-none transition focus:border-gray-900 focus:ring-0"
+                        >
+                    </div>
+
+                    <div>
+                        <div class="mb-2 flex items-center justify-between">
+                            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                            <button type="button" id="togglePassword" class="text-xs font-medium text-gray-500 hover:text-gray-900">
+                                Show password
+                            </button>
+                        </div>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Enter your password"
+                            required
+                            class="w-full border-0 border-b border-gray-300 bg-transparent px-0 py-3 text-base outline-none transition focus:border-gray-900 focus:ring-0"
+                        >
+                    </div>
+
+                    <div id="statusMessage" class="hidden rounded-md px-4 py-3 text-sm" role="alert" aria-live="polite"></div>
+
+                    <button
+                        id="submitButton"
+                        type="submit"
+                        class="flex w-full items-center justify-center bg-gray-900 px-6 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        <span id="submitLabel">Sign in</span>
+                        <span id="submitLoader" class="hidden items-center gap-2">
+                            <span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                            Signing in
+                        </span>
+                    </button>
+                </form>
+
+                <p class="mt-8 text-center text-sm text-gray-500">
+                    New to SuperCart?
+                    <button id="showSignupButton" type="button" class="font-medium text-gray-900 underline underline-offset-4 hover:text-gray-600">Create an account</button>
+                </p>
+
+                <div id="signupPanel" class="mt-8 hidden border-t border-gray-100 pt-8">
+                    <h3 class="font-serif text-2xl">Create customer account</h3>
+                    <form id="signupForm" class="mt-5 space-y-5" novalidate>
+                        <div>
+                            <label for="signupName" class="mb-2 block text-sm font-medium text-gray-700">Full name</label>
+                            <input id="signupName" required class="w-full border-0 border-b border-gray-300 bg-transparent px-0 py-3 outline-none focus:border-gray-900">
+                        </div>
+                        <div>
+                            <label for="signupMobile" class="mb-2 block text-sm font-medium text-gray-700">Mobile number</label>
+                            <input id="signupMobile" type="tel" inputmode="numeric" maxlength="10" required class="w-full border-0 border-b border-gray-300 bg-transparent px-0 py-3 outline-none focus:border-gray-900">
+                        </div>
+                        <div>
+                            <label for="signupCity" class="mb-2 block text-sm font-medium text-gray-700">City</label>
+                            <input id="signupCity" required class="w-full border-0 border-b border-gray-300 bg-transparent px-0 py-3 outline-none focus:border-gray-900">
+                        </div>
+                        <div>
+                            <label for="signupPassword" class="mb-2 block text-sm font-medium text-gray-700">Password</label>
+                            <input id="signupPassword" type="password" minlength="6" required class="w-full border-0 border-b border-gray-300 bg-transparent px-0 py-3 outline-none focus:border-gray-900">
+                        </div>
+                        <div id="signupStatus" class="hidden rounded-md px-4 py-3 text-sm" role="alert"></div>
+                        <button id="signupSubmit" type="submit" class="w-full bg-gray-900 px-6 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-gray-700">Sign up</button>
+                    </form>
+                </div>
+                <a href="index.html" class="mt-6 block text-center text-xs font-medium uppercase tracking-widest text-gray-500 hover:text-gray-900">
+                    &larr; Back to store
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const API_BASE_URL = "http://127.0.0.1:8000";
+
+        const loginForm = document.getElementById("loginForm");
+        const mobileNumber = document.getElementById("mobileNumber");
+        const password = document.getElementById("password");
+        const togglePassword = document.getElementById("togglePassword");
+        const statusMessage = document.getElementById("statusMessage");
+        const submitButton = document.getElementById("submitButton");
+        const submitLabel = document.getElementById("submitLabel");
+        const submitLoader = document.getElementById("submitLoader");
+
+        function showStatus(message, isError) {
+            statusMessage.textContent = message;
+            statusMessage.className = isError
+                ? "rounded-md bg-red-50 px-4 py-3 text-sm text-red-700"
+                : "rounded-md bg-green-50 px-4 py-3 text-sm text-green-700";
+        }
+
+        function setLoading(isLoading) {
+            submitButton.disabled = isLoading;
+            submitLabel.classList.toggle("hidden", isLoading);
+            submitLoader.classList.toggle("hidden", !isLoading);
+            submitLoader.classList.toggle("flex", isLoading);
+        }
+
+        togglePassword.addEventListener("click", () => {
+            const isPassword = password.type === "password";
+            password.type = isPassword ? "text" : "password";
+            togglePassword.textContent = isPassword ? "Hide password" : "Show password";
+        });
+
+        document.getElementById("showSignupButton").addEventListener("click", () => {
+            const panel = document.getElementById("signupPanel");
+            panel.classList.toggle("hidden");
+            if (!panel.classList.contains("hidden")) document.getElementById("signupName").focus();
+        });
+
+        document.getElementById("signupForm").addEventListener("submit", async event => {
+            event.preventDefault();
+            const name = document.getElementById("signupName").value.trim();
+            const mobile = document.getElementById("signupMobile").value.trim();
+            const city = document.getElementById("signupCity").value.trim();
+            const passwordValue = document.getElementById("signupPassword").value;
+            const status = document.getElementById("signupStatus");
+
+            if (!name || !city) {
+                status.textContent = "Enter your name and city.";
+                status.className = "rounded-md bg-red-50 px-4 py-3 text-sm text-red-700";
+                return;
+            }
+            if (!/^\d{10}$/.test(mobile)) {
+                status.textContent = "Enter a valid 10-digit mobile number.";
+                status.className = "rounded-md bg-red-50 px-4 py-3 text-sm text-red-700";
+                return;
+            }
+            if (passwordValue.length < 6) {
+                status.textContent = "Password must be at least 6 characters.";
+                status.className = "rounded-md bg-red-50 px-4 py-3 text-sm text-red-700";
+                return;
+            }
+
+            const button = document.getElementById("signupSubmit");
+            button.disabled = true;
+            button.textContent = "Creating account...";
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/signup/customer`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, mobile_no: mobile, password: passwordValue, city })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.detail || result.message || "Unable to create account.");
+
+                status.textContent = "Account created successfully. You can now sign in.";
+                status.className = "rounded-md bg-green-50 px-4 py-3 text-sm text-green-700";
+                mobileNumber.value = mobile;
+                password.value = "";
+                event.target.reset();
+                document.getElementById("signupPanel").classList.add("hidden");
+            } catch (error) {
+                status.textContent = error instanceof TypeError ? "Unable to reach the server." : error.message;
+                status.className = "rounded-md bg-red-50 px-4 py-3 text-sm text-red-700";
+            } finally {
+                button.disabled = false;
+                button.textContent = "Sign up";
+            }
+        });
+
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            statusMessage.className = "hidden";
+
+            const mobile = mobileNumber.value.trim();
+            if (!/^\d{10}$/.test(mobile)) {
+                showStatus("Enter a valid 10-digit mobile number.", true);
+                mobileNumber.focus();
+                return;
+            }
+
+            if (!password.value) {
+                showStatus("Enter your password to continue.", true);
+                password.focus();
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/signin`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: mobile,
+                        password: password.value
+                    })
+                });
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || "Unable to sign in. Check your credentials.");
+                }
+
+                const encodedPayload = result.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+                const paddedPayload = encodedPayload.padEnd(encodedPayload.length + (4 - encodedPayload.length % 4) % 4, '=');
+                const tokenPayload = JSON.parse(atob(paddedPayload));
+                const role = tokenPayload.role || "Customer";
+                localStorage.setItem("access_token", result.access_token);
+                localStorage.setItem("token_type", result.token_type || "Bearer");
+                localStorage.setItem("user_role", role);
+                localStorage.setItem("warehouse_id", tokenPayload.warehouse_id || "");
+                localStorage.setItem("manager_id", tokenPayload.manager_id || "");
+                showStatus("Signed in successfully. Redirecting...", false);
+                window.setTimeout(() => {
+                    sessionStorage.removeItem("login_return_url");
+                    window.location.href = role === "Manager" ? "manager.html" : "index.html";
+                }, 500);
+            } catch (error) {
+                const message = error instanceof TypeError
+                    ? "Unable to reach the server. Make sure the API is running."
+                    : error.message;
+                showStatus(message, true);
+            } finally {
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>

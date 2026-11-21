@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders | SuperCart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #f1f3f6; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .order-card { transition: box-shadow .2s ease, transform .2s ease; }
+        .order-card:hover { box-shadow: 0 5px 18px rgba(0, 0, 0, .12); transform: translateY(-1px); }
+        .progress-line { background: #d7dce2; }
+        .progress-line.is-complete { background: #111827; }
+        .status-dot { box-shadow: 0 0 0 3px #fff, 0 0 0 4px #d7dce2; }
+        .status-dot.is-complete { box-shadow: 0 0 0 3px #fff, 0 0 0 4px #111827; }
+        @media (max-width: 640px) {
+            .order-card:hover { transform: none; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-900 antialiased">
+    <header class="sticky top-0 z-30 bg-gray-900 text-white shadow-md">
+        <div class="mx-auto flex max-w-7xl items-center gap-8 px-4 py-3 sm:px-6">
+            <a href="index.html" class="inline-flex items-center gap-2" aria-label="SuperCart home">
+                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
+                <span class="font-serif text-2xl font-bold tracking-widest uppercase">Super<span class="font-light italic text-gray-300">Cart</span></span>
+            </a>
+            <div class="hidden max-w-xl flex-1 md:block">
+                <label class="relative block">
+                    <span class="sr-only">Search products</span>
+                    <input type="search" placeholder="Search for products, brands and more" class="w-full rounded-sm border-0 px-4 py-2.5 pr-10 text-sm text-gray-800 shadow-sm outline-none placeholder:text-gray-500 focus:ring-2 focus:ring-gray-300">
+                    <span class="absolute right-0 top-0 flex h-full w-11 items-center justify-center text-gray-700">⌕</span>
+                </label>
+            </div>
+            <nav class="ml-auto flex items-center gap-4 text-sm font-medium">
+                <a href="index.html" class="hidden hover:text-gray-300 sm:inline">Store</a>
+                <button id="signOutButton" type="button" class="rounded-sm border border-gray-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-gray-800">Sign out</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div class="mb-5 text-xs text-gray-500"><a href="index.html" class="hover:text-gray-900">Home</a><span class="mx-2">›</span>My Orders</div>
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-[250px_1fr]">
+            <aside class="h-fit space-y-3">
+                <div class="flex items-center gap-3 bg-white p-4 shadow-sm">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-900 text-lg font-bold text-white">U</div>
+                    <div><p class="text-xs text-gray-500">Hello,</p><p class="font-semibold">SuperCart Customer</p></div>
+                </div>
+                <div class="overflow-hidden bg-white shadow-sm">
+                    <a href="account.html" class="flex items-center gap-3 border-b border-gray-100 px-5 py-4 text-sm text-gray-600 hover:text-gray-900"><span class="text-lg">◉</span> My Account <span class="ml-auto">›</span></a>
+                    <div class="flex items-center gap-3 border-l-4 border-gray-900 bg-gray-50 px-4 py-4 text-sm font-semibold text-gray-900"><span class="text-lg">▣</span> My Orders</div>
+                    <a href="index.html" class="flex items-center gap-3 px-5 py-4 text-sm text-gray-600 hover:text-gray-900"><span class="text-lg">♡</span> Continue Shopping <span class="ml-auto">›</span></a>
+                </div>
+            </aside>
+            <section>
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <h1 class="text-xl font-semibold text-gray-800">My Orders</h1>
+                    <div class="flex items-center gap-2">
+                        <select id="orderFilter" class="rounded-sm border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-600 outline-none focus:border-gray-900">
+                            <option value="all">All orders</option><option value="placed">Placed</option><option value="packed">Packed</option><option value="pending">Pending</option><option value="dispatched">Dispatched</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
+                        </select>
+                        <button id="refreshOrders" type="button" class="rounded-sm bg-white px-4 py-2 text-xs font-semibold text-gray-900 shadow-sm hover:bg-gray-50">Refresh</button>
+                    </div>
+                </div>
+                <div id="ordersStatus" class="rounded-sm border border-gray-200 bg-white px-6 py-12 text-center text-sm text-gray-500 shadow-sm">Loading your orders...</div>
+                <div id="ordersList" class="mt-3 space-y-3"></div>
+            </section>
+        </div>
+    </main>
+
+    <div id="toast" class="fixed bottom-6 left-1/2 z-50 hidden -translate-x-1/2 rounded-sm bg-gray-900 px-5 py-3 text-sm text-white shadow-lg" role="status"></div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8000';
+        const token = () => localStorage.getItem('access_token');
+        const authHeaders = (extra = {}) => ({ ...extra, 'Authorization': 'Bearer ' + token() });
+
+        const notFoundOrderImage = '../assets/product_images/images.png';
+        function resolveOrderImageUrl(imageUrl) {
+            if (typeof imageUrl !== 'string' || !imageUrl.trim()) return notFoundOrderImage;
+            const trimmedUrl = imageUrl.trim().replace(/\\/g, '/');
+            if (/^https?:\/\//i.test(trimmedUrl)) return trimmedUrl;
+            return trimmedUrl.startsWith('../')
+                ? trimmedUrl
+                : `../${trimmedUrl.replace(/^\.\//, '').replace(/^\//, '')}`;
+        }
+        async function getProductImage(productId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/products/images?product_id=${encodeURIComponent(productId)}`);
+                if (!response.ok) return notFoundOrderImage;
+                const data = await response.json();
+                const image = Array.isArray(data) ? data.find(item => item && item.image_url) : data;
+                return resolveOrderImageUrl(image && image.image_url);
+            } catch (_) {
+                return notFoundOrderImage;
+            }
+        }
+
+        if (!token()) {
+            sessionStorage.setItem('login_return_url', 'orders.html');
+            window.location.href = 'login.html';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            window.clearTimeout(showToast.timeout);
+            showToast.timeout = window.setTimeout(() => toast.classList.add('hidden'), 2600);
+        }
+
+        function statusStyle(status) {
+            const value = String(status).toLowerCase();
+            if (value.includes('cancel')) return 'bg-red-50 text-red-700';
+            if (value.includes('deliver')) return 'bg-green-50 text-green-700';
+            if (value.includes('dispatch') || value.includes('ship')) return 'bg-gray-100 text-gray-800';
+            return 'bg-amber-50 text-amber-700';
+        }
+
+        function formatDeliveryDate(value) {
+            if (!value) return 'Delivery date will be updated';
+            const date = new Date(`${value}T00:00:00`);
+            if (Number.isNaN(date.getTime())) return value;
+            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function orderStage(status) {
+            const value = String(status).toLowerCase();
+            if (value.includes('cancel')) return -1;
+            if (value.includes('deliver')) return 3;
+            if (value.includes('dispatch') || value.includes('ship')) return 2;
+            if (value.includes('pack')) return 1;
+            if (value.includes('place') || value.includes('confirm')) return 0;
+            return 0;
+        }
+
+        function progressMarkup(status) {
+            const stage = orderStage(status);
+            if (stage === -1) return '<div class="mt-5 border-t border-red-100 pt-4 text-xs font-medium text-red-600">This order has been cancelled.</div>';
+            const labels = ['Order placed', 'Packed', 'Shipped', 'Delivered'];
+            return `<div class="mt-5 hidden grid-cols-4 gap-1 border-t border-gray-100 pt-5 sm:grid">${labels.map((label, index) => {
+                const complete = index <= stage;
+                return `<div class="relative text-center text-[11px] ${complete ? 'font-semibold text-gray-900' : 'text-gray-400'}">
+                    ${index < labels.length - 1 ? `<span class="progress-line ${index < stage ? 'is-complete' : ''} absolute left-1/2 top-1.5 h-0.5 w-full"></span>` : ''}
+                    <span class="status-dot ${complete ? 'is-complete bg-gray-900' : 'bg-white'} relative z-10 mx-auto block h-3 w-3 rounded-full"></span>
+                    <span class="relative z-10 mt-2 block">${label}</span>
+                </div>`;
+            }).join('')}</div>`;
+        }
+
+        async function loadOrderDetails(orderId, container, index = null) {
+            container.innerHTML = '<p class="text-sm text-gray-500">Loading order items...</p>';
+            try {
+                const response = await fetch(`${API_BASE_URL}/customer/order/${encodeURIComponent(orderId)}`, { headers: authHeaders() });
+                if (!response.ok) throw new Error('Unable to load order details.');
+                const details = await response.json();
+                if (!Array.isArray(details) || details.length === 0) {
+                    container.innerHTML = '<p class="text-sm text-gray-500">No items found for this order.</p>';
+                    return;
+                }
+                const deliveryDates = details.map(item => item.expected_delivery).filter(Boolean).sort();
+                if (index !== null) {
+                    const delivery = document.getElementById(`delivery-${index}`);
+                    if (delivery) delivery.textContent = deliveryDates.length ? `Expected delivery: ${formatDeliveryDate(deliveryDates[0])}` : 'Expected delivery: Date pending';
+                }
+                const detailRows = await Promise.all(details.map(async item => {
+                    const imageUrl = await getProductImage(item.product_id);
+                    return `<div class="flex items-center justify-between gap-4 py-3"><img src="${imageUrl}" alt="Product #${item.product_id}" class="h-16 w-16 rounded-sm border border-gray-100 object-cover" onerror="this.onerror=null;this.src='../assets/product_images/images.png';"><div class="min-w-0 flex-1"><p class="text-sm font-medium">Product #${item.product_id}</p><p class="mt-1 text-xs text-gray-500">Qty ${item.quantity} · Status: ${item.current_status}</p></div><div class="text-right"><strong class="text-sm">₹${Number(item.subtotal || 0).toFixed(2)}</strong><p class="mt-1 text-xs font-semibold text-gray-700">Expected delivery: ${formatDeliveryDate(item.expected_delivery)}</p></div></div>`;
+                }));
+                container.innerHTML = `<div class="divide-y divide-gray-100">${detailRows.join('')}</div>`;
+            } catch (error) {
+                container.innerHTML = `<p class="text-sm text-red-600">${error.message}</p>`;
+            }
+        }
+
+        async function cancelOrder(orderId) {
+            if (!confirm('Cancel this order?')) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/customer/order/delete?order_id=${encodeURIComponent(orderId)}`, {
+                    method: 'DELETE',
+                    headers: authHeaders()
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Unable to cancel this order.');
+                showToast(result.message || 'Order cancelled successfully.');
+                await loadOrders();
+            } catch (error) {
+                showToast(error.message);
+            }
+        }
+
+        async function loadOrders() {
+            const status = document.getElementById('ordersStatus');
+            const list = document.getElementById('ordersList');
+            status.textContent = 'Loading your orders...';
+            status.classList.remove('hidden');
+            list.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/customer/order/view`, { headers: authHeaders() });
+                if (!response.ok) throw new Error('Unable to load your orders.');
+                const orders = await response.json();
+
+                if (!Array.isArray(orders) || orders.length === 0) {
+                    status.innerHTML = '<p class="font-serif text-xl text-gray-900">No orders yet</p><a href="index.html" class="mt-4 inline-block text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-900">Explore the store</a>';
+                    return;
+                }
+
+                const filter = document.getElementById('orderFilter').value;
+                const filteredOrders = filter === 'all'
+                    ? orders
+                    : orders.filter(order => String(order.status).toLowerCase() === filter);
+
+                if (filteredOrders.length === 0) {
+                    status.innerHTML = '<p class="font-serif text-xl text-gray-900">No matching orders</p><p class="mt-2 text-sm text-gray-500">Try another status filter.</p>';
+                    return;
+                }
+
+                status.classList.add('hidden');
+                list.innerHTML = filteredOrders.map((order, index) => `
+                    <article class="order-card overflow-hidden rounded-sm border border-gray-200 bg-white shadow-sm">
+                        <div class="border-b border-gray-100 bg-gray-50 px-4 py-3 sm:px-6">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div class="flex items-center gap-6">
+                                    <div><p class="text-[10px] uppercase tracking-wider text-gray-500">Order ID</p><p class="mt-1 text-xs font-semibold text-gray-800">${order.order_id}</p></div>
+                                    <div class="hidden sm:block"><p class="text-[10px] uppercase tracking-wider text-gray-500">Placed on</p><p class="mt-1 text-xs text-gray-700">${order.order_date}</p></div>
+                                </div>
+                                <div class="flex items-center gap-4"><span class="rounded-sm px-2.5 py-1 text-xs font-medium ${statusStyle(order.status)}">${order.status}</span><button type="button" data-details="${index}" data-order-id="${order.order_id}" class="text-xs font-semibold text-gray-900 hover:underline">View details</button></div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-5 sm:px-6">
+                            <div class="flex flex-wrap items-center justify-between gap-4">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">Order total</p>
+                                    <p class="mt-1 text-lg font-semibold">₹${Number(order.total_amount || 0).toFixed(2)}</p>
+                                    <p id="delivery-${index}" class="mt-2 text-xs font-semibold text-gray-700">Loading expected delivery...</p>
+                                </div>
+                                <div class="flex items-center gap-3 text-xs text-gray-500"><span class="h-2 w-2 rounded-full ${String(order.status).toLowerCase().includes('cancel') ? 'bg-red-500' : 'bg-green-600'}"></span> ${order.status}</div>
+                                ${!['cancelled', 'delivered'].includes(String(order.status).toLowerCase()) ? `<button type="button" data-cancel="${order.order_id}" class="text-xs font-semibold text-red-600 hover:underline">Cancel order</button>` : ''}
+                            </div>
+                            ${progressMarkup(order.status)}
+                        </div>
+                        <div id="details-${index}" class="hidden border-t border-gray-100 bg-white px-4 py-5 sm:px-6"></div>
+                    </article>
+                `).join('');
+
+                list.querySelectorAll('[data-details]').forEach(button => button.addEventListener('click', () => {
+                    const details = document.getElementById(`details-${button.dataset.details}`);
+                    if (!details.classList.contains('hidden')) {
+                        details.classList.add('hidden');
+                        button.textContent = 'View details';
+                        return;
+                    }
+                    details.classList.remove('hidden');
+                    button.textContent = 'Hide details';
+                    loadOrderDetails(button.dataset.orderId, details, Number(button.dataset.details));
+                }));
+
+                list.querySelectorAll('[data-cancel]').forEach(button => button.addEventListener('click', () => cancelOrder(button.dataset.cancel)));
+
+                filteredOrders.forEach((order, index) => {
+                    loadOrderDetails(order.order_id, document.getElementById(`details-${index}`), index);
+                });
+            } catch (error) {
+                status.innerHTML = `<p class="text-red-600">${error.message}</p>`;
+            }
+        }
+
+        document.getElementById('refreshOrders').addEventListener('click', loadOrders);
+        document.getElementById('orderFilter').addEventListener('change', loadOrders);
+        document.getElementById('signOutButton').addEventListener('click', () => {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('token_type');
+            window.location.href = 'login.html';
+        });
+
+        loadOrders();
+    </script>
+</body>
+</html>

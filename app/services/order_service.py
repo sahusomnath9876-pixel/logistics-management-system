@@ -106,7 +106,7 @@ class OrderService:
                 order_items = self.__order_items_db.create_order_items(
                     order_id= order_data.order_id,
                     product_id= cart_data.product_id,
-                    quantity= cart_data.qunatity,
+                    quantity= cart_data.quantity,
                     unit_price= products.price,
                     subtotal= cart_data.total_price
                 )
@@ -115,18 +115,17 @@ class OrderService:
                     if delete_order:
                         raise UnexpectedErrorAccuerd("Unable To Place Your Order Right Now")
                 else:
-                    warehouse_id, delivery_time, inventory_id = self.__availabe_warehouse(cart_data.product_id, cart_data.qunatity)
+                    warehouse_id, delivery_time, inventory_id = self.__availabe_warehouse(cart_data.product_id, cart_data.quantity)
                     if not warehouse_id:
                         raise NotFoundError("Unable To Find Warehouse Id")
                     delivery_date = self.excpected_delivery_date(delivery_time)
                     update_date = self.__order_items_db.update_order_items(order_items.id, delivery_date)
                     assign_warehouse = self.__order_items_db.assign_warehouse(order_items.id, warehouse_id)
-                    update_stock = self.__update_stock_data(inventory_id, cart_data.product_id, cart_data.qunatity)
-                
-                        
+                    update_stock = self.__update_stock_data(inventory_id, cart_data.product_id, cart_data.quantity)
+
             update_amount = self.__orders_db.update_status(order_data.order_id, "amount", total_amount)
             if update_amount:
-                return order_items #adding hours in next time.....
+                return update_amount #adding hours in next time.....
         
         
     def place_order(self) -> object:
@@ -149,6 +148,13 @@ class OrderService:
                 return order_data
             else:
                 return NotFoundError("Order Not founded")
+
+
+    def show_order_details(self, order_id : str) -> object:
+        order_data = self.__order_items_db.get_order_details(order_id)
+        if not order_data:
+            raise NotFoundError("Orders Not Founded")
+        return order_data
     
     def cancel_my_order(self, order_id : str) -> str: ##we will need to modify this to get status in cancelled and dispatched
         order_data = self.__orders_db.get_order(order_id)

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Manager | SuperCart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #f4f4f2; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .sidebar-link.active { background: #111827; color: white; }
+        .stat-card, .panel { border: 1px solid #e5e7eb; background: white; }
+    </style>
+</head>
+<body class="min-h-screen text-gray-900">
+    <div class="flex min-h-screen">
+        <aside class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-white border-r border-gray-200">
+            <div class="flex h-20 items-center px-7 border-b border-gray-100">
+                <svg class="h-7 w-7 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
+                <div>
+                    <p class="font-serif text-xl tracking-widest uppercase">SuperCart</p>
+                    <p class="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Manager portal</p>
+                </div>
+            </div>
+            <nav class="flex-1 space-y-1 px-4 py-6">
+                <button data-view="dashboard" class="sidebar-link active flex w-full items-center gap-3 rounded-sm px-4 py-3 text-sm font-medium"><span>▦</span>Dashboard</button>
+                <button data-view="orders" class="sidebar-link flex w-full items-center gap-3 rounded-sm px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"><span>▣</span>Pending orders</button>
+                <button data-view="inventory" class="sidebar-link flex w-full items-center gap-3 rounded-sm px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"><span>◫</span>Inventory</button>
+                <button data-view="products" class="sidebar-link flex w-full items-center gap-3 rounded-sm px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"><span>□</span>Products</button>
+            </nav>
+            <div class="border-t border-gray-100 p-4">
+                <div class="mb-3 rounded-sm bg-gray-50 px-4 py-3">
+                    <p class="text-xs text-gray-400">Warehouse</p>
+                    <p id="warehouseLabel" class="mt-1 text-sm font-semibold">Warehouse <span id="warehouseId"></span></p>
+                </div>
+                <button id="managerSignOut" class="w-full rounded-sm border border-gray-200 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-red-600 hover:bg-red-50">Sign out</button>
+            </div>
+        </aside>
+
+        <main class="ml-64 w-[calc(100%-16rem)] px-8 py-7">
+            <header class="mb-8 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-gray-400">Operations</p>
+                    <h1 id="pageTitle" class="mt-2 font-serif text-3xl">Warehouse dashboard</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="refreshButton" class="rounded-sm border border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-widest hover:border-gray-900">Refresh</button>
+                    <button id="openAddProduct" class="rounded-sm bg-gray-900 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700">Add product</button>
+                </div>
+            </header>
+
+            <section id="dashboardView">
+                <div class="grid gap-4 md:grid-cols-3">
+                    <article class="stat-card rounded-sm p-5"><p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Pending orders</p><p id="pendingStat" class="mt-3 font-serif text-4xl">—</p></article>
+                    <article class="stat-card rounded-sm p-5"><p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Inventory items</p><p id="inventoryStat" class="mt-3 font-serif text-4xl">—</p></article>
+                    <article class="stat-card rounded-sm p-5"><p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Units in stock</p><p id="stockStat" class="mt-3 font-serif text-4xl">—</p></article>
+                </div>
+                <div class="panel mt-6 rounded-sm p-6">
+                    <div class="mb-5 flex items-center justify-between"><h2 class="font-serif text-2xl">Recent pending orders</h2><button data-view="orders" class="view-button text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-gray-900">View all</button></div>
+                    <div id="dashboardOrders"></div>
+                </div>
+            </section>
+
+            <section id="ordersView" class="hidden">
+                <div class="panel rounded-sm p-6">
+                    <div class="mb-5 flex items-center justify-between"><div><h2 class="font-serif text-2xl">Pending orders</h2><p class="mt-1 text-sm text-gray-500">Orders assigned to this warehouse.</p></div></div>
+                    <div id="ordersTable"></div>
+                </div>
+            </section>
+
+            <section id="inventoryView" class="hidden">
+                <div class="panel rounded-sm p-6">
+                    <div class="mb-5"><h2 class="font-serif text-2xl">Warehouse inventory</h2><p class="mt-1 text-sm text-gray-500">Available and reserved stock.</p></div>
+                    <div id="inventoryTable"></div>
+                </div>
+            </section>
+
+            <section id="productsView" class="hidden">
+                <div class="panel rounded-sm p-6">
+                    <div class="mb-5"><h2 class="font-serif text-2xl">Product catalogue</h2><p class="mt-1 text-sm text-gray-500">Products currently stocked in this warehouse.</p></div>
+                    <div id="productsTable"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="productModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4">
+        <div class="w-full max-w-lg rounded-sm bg-white shadow-2xl">
+            <div class="flex items-center justify-between border-b border-gray-100 px-6 py-5"><h2 class="font-serif text-2xl">Add product</h2><button id="closeProductModal" class="text-xl text-gray-400 hover:text-gray-900">&times;</button></div>
+            <form id="productForm" class="space-y-5 p-6">
+                <div><label class="mb-2 block text-sm font-medium">Product name</label><input name="product_name" required class="w-full rounded-sm border border-gray-300 px-4 py-3 outline-none focus:border-gray-900"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="mb-2 block text-sm font-medium">Category</label><input name="category" required class="w-full rounded-sm border border-gray-300 px-4 py-3 outline-none focus:border-gray-900"></div>
+                    <div><label class="mb-2 block text-sm font-medium">Weight</label><input name="weight" required placeholder="500 g" class="w-full rounded-sm border border-gray-300 px-4 py-3 outline-none focus:border-gray-900"></div>
+                </div>
+                <div><label class="mb-2 block text-sm font-medium">Price (₹)</label><input name="price" type="number" min="1" required class="w-full rounded-sm border border-gray-300 px-4 py-3 outline-none focus:border-gray-900"></div>
+                <div>
+                    <label class="mb-2 block text-sm font-medium">Product image</label>
+                    <input id="productImageFile" name="product_image" type="file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-sm file:border-0 file:bg-gray-100 file:px-4 file:py-3 file:text-xs file:font-semibold file:uppercase file:tracking-widest hover:file:bg-gray-200">
+                    <p id="productImagePath" class="mt-2 hidden text-xs text-gray-500"></p>
+                    <img id="productImagePreview" class="mt-3 hidden h-32 w-32 rounded-sm border border-gray-200 object-cover" alt="Selected product preview">
+                </div>
+                <p id="productFormError" class="hidden rounded-sm bg-red-50 px-4 py-3 text-sm text-red-700"></p>
+                <button type="submit" class="w-full rounded-sm bg-gray-900 px-6 py-4 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700">Create product</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="stockModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4">
+        <div class="w-full max-w-md rounded-sm bg-white shadow-2xl">
+            <div class="flex items-center justify-between border-b border-gray-100 px-6 py-5"><h2 class="font-serif text-2xl">Update stock</h2><button id="closeStockModal" class="text-xl text-gray-400 hover:text-gray-900">&times;</button></div>
+            <form id="stockForm" class="space-y-5 p-6">
+                <input type="hidden" name="inv_id"><input type="hidden" name="product_id">
+                <div><p id="stockProductName" class="text-sm font-medium"></p><p id="stockCurrent" class="mt-1 text-xs text-gray-500"></p></div>
+                <div><label class="mb-2 block text-sm font-medium">New stock quantity</label><input name="stock" type="number" min="0" required class="w-full rounded-sm border border-gray-300 px-4 py-3 outline-none focus:border-gray-900"></div>
+                <button type="submit" class="w-full rounded-sm bg-gray-900 px-6 py-4 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700">Save stock</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4">
+        <div class="w-full max-w-md rounded-sm bg-white shadow-2xl">
+            <div class="flex items-center justify-between border-b border-gray-100 px-6 py-5"><h2 class="font-serif text-2xl">Edit product</h2><button id="closeEditModal" class="text-xl text-gray-400 hover:text-gray-900">&times;</button></div>
+            <form id="editForm" class="space-y-5 p-6">
+                <input type="hidden" name="product_id">
+                <div><label class="mb-2 block text-sm font-medium">Update field</label><select id="updateType" name="update_type" class="w-full rounded-sm border border-gray-300 px-4 py-3"><option value="price">Price</option><option value="product_name">Product name</option><option value="category">Category</option><option value="weight">Weight</option><option value="image">Image</option></select></div>
+                <div id="newValueSection"><label class="mb-2 block text-sm font-medium">New value</label><input id="editNewValue" name="new_data" required class="w-full rounded-sm border border-gray-300 px-4 py-3 outline-none focus:border-gray-900"></div>
+                <div id="editProductImageOptions" class="hidden">
+                    <label class="mb-2 block text-sm font-medium">Product image action</label>
+                    <select id="editImageAction" name="image_action" class="w-full rounded-sm border border-gray-300 px-4 py-3">
+                        <option value="edit">Edit existing image</option>
+                        <option value="add">Add product image</option>
+                    </select>
+                    <div id="editProductImageSection" class="mt-4">
+                        <input id="editProductImageFile" name="product_image" type="file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-sm file:border-0 file:bg-gray-100 file:px-4 file:py-3 file:text-xs file:font-semibold file:uppercase file:tracking-widest hover:file:bg-gray-200">
+                        <p id="editProductImagePath" class="mt-2 hidden text-xs text-gray-500"></p>
+                        <img id="editProductImagePreview" class="mt-3 hidden h-32 w-32 rounded-sm border border-gray-200 object-cover" alt="Selected product preview">
+                    </div>
+                </div>
+                <button type="submit" class="w-full rounded-sm bg-gray-900 px-6 py-4 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700">Update product</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 left-1/2 z-[60] hidden -translate-x-1/2 rounded-sm bg-gray-900 px-5 py-3 text-sm text-white shadow-lg"></div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8000';
+        const token = () => localStorage.getItem('access_token');
+        const role = () => localStorage.getItem('user_role');
+        const authHeaders = (extra = {}) => ({ ...extra, 'Authorization': 'Bearer ' + token() });
+
+        if (!token() || role() !== 'Manager') {
+            window.location.replace(role() === 'Manager' ? 'login.html' : 'login.html');
+        }
+
+        document.getElementById('warehouseId').textContent = localStorage.getItem('warehouse_id') || '—';
+
+        let inventory = [];
+        let pendingOrders = [];
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            clearTimeout(showToast.timer);
+            showToast.timer = setTimeout(() => toast.classList.add('hidden'), 2800);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+        }
+
+        function getProductImagePath(file) {
+            if (!file) return 'assets/product_images/images.png';
+            const extension = file.name.includes('.')
+                ? file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+                : '.jpg';
+            const baseName = file.name
+                .replace(/\.[^.]+$/, '')
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '') || 'product';
+            return `assets/product_images/${baseName}${extension}`;
+        }
+
+        function setupProductImagePreview(fileInputId, previewId, pathId) {
+            const fileInput = document.getElementById(fileInputId);
+            const preview = document.getElementById(previewId);
+            const pathLabel = document.getElementById(pathId);
+
+            fileInput.addEventListener('change', () => {
+                const file = fileInput.files[0];
+                if (!file) {
+                    preview.classList.add('hidden');
+                    preview.removeAttribute('src');
+                    pathLabel.classList.add('hidden');
+                    return;
+                }
+
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+                pathLabel.textContent = `Image path: ${getProductImagePath(file)}`;
+                pathLabel.classList.remove('hidden');
+            });
+        }
+
+        async function saveProductImageToAssets(file) {
+            if (!file) return;
+            if (!window.showDirectoryPicker) {
+                throw new Error('This browser cannot copy files automatically. Copy the selected image into assets/product_images and keep the generated path.');
+            }
+
+            const directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+            const fileName = getProductImagePath(file).split('/').pop();
+            const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(file);
+            await writable.close();
+        }
+
+        function showView(view) {
+            ['dashboard', 'orders', 'inventory', 'products'].forEach(name => document.getElementById(name + 'View').classList.toggle('hidden', name !== view));
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.toggle('active', link.dataset.view === view));
+            const titles = { dashboard: 'Warehouse dashboard', orders: 'Pending orders', inventory: 'Warehouse inventory', products: 'Product catalogue' };
+            document.getElementById('pageTitle').textContent = titles[view];
+        }
+
+        async function loadInventory() {
+            const response = await fetch(`${API_BASE_URL}/warehouse/product/view`, { headers: authHeaders() });
+            if (!response.ok) throw new Error('Unable to load inventory.');
+            inventory = await response.json();
+            const details = await Promise.all(inventory.map(async item => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/warehouse/product/view/${item.product_id}`, { headers: authHeaders() });
+                    return response.ok ? await response.json() : { product_id: item.product_id, product_name: `Product #${item.product_id}` };
+                } catch (_) { return { product_id: item.product_id, product_name: `Product #${item.product_id}` }; }
+            }));
+            inventory = inventory.map((item, index) => ({ ...item, ...details[index] }));
+
+            document.getElementById('inventoryStat').textContent = inventory.length;
+            document.getElementById('stockStat').textContent = inventory.reduce((total, item) => total + Number(item.stock || 0), 0).toLocaleString('en-IN');
+
+            document.getElementById('inventoryTable').innerHTML = inventory.length ? `
+                <div class="overflow-x-auto"><table class="w-full text-left"><thead class="border-b border-gray-200 text-[10px] uppercase tracking-widest text-gray-400"><tr><th class="py-3">Product</th><th>Category</th><th>Available</th><th>Reserved</th><th class="text-right">Action</th></tr></thead>
+                <tbody class="divide-y divide-gray-100">${inventory.map(item => `<tr><td class="py-4"><p class="text-sm font-semibold">${escapeHtml(item.product_name)}</p><p class="mt-1 text-xs text-gray-400">ID ${item.product_id}</p></td><td class="text-sm text-gray-500">${escapeHtml(item.category || '—')}</td><td><span class="text-sm font-semibold">${item.stock}</span></td><td class="text-sm text-gray-500">${item.reserved_stock}</td><td class="text-right"><button data-stock='${item.id}' data-product='${item.product_id}' class="rounded-sm border border-gray-300 px-3 py-2 text-xs font-semibold hover:border-gray-900">Update stock</button></td></tr>`).join('')}</tbody></table></div>`
+                : '<p class="py-10 text-center text-sm text-gray-500">No inventory found.</p>';
+
+            document.getElementById('productsTable').innerHTML = inventory.length ? `
+                <div class="overflow-x-auto"><table class="w-full text-left"><thead class="border-b border-gray-200 text-[10px] uppercase tracking-widest text-gray-400"><tr><th class="py-3">Product</th><th>Weight</th><th>Price</th><th>Stock</th><th class="text-right">Action</th></tr></thead>
+                <tbody class="divide-y divide-gray-100">${inventory.map(item => `<tr><td class="py-4"><p class="text-sm font-semibold">${escapeHtml(item.product_name)}</p><p class="mt-1 text-xs text-gray-400">ID ${item.product_id} · ${escapeHtml(item.category || '—')}</p></td><td class="text-sm text-gray-500">${escapeHtml(item.weight || '—')}</td><td class="text-sm font-semibold">₹${Number(item.price || 0).toLocaleString('en-IN')}</td><td class="text-sm">${item.stock}</td><td class="text-right"><button data-edit='${item.product_id}' class="rounded-sm border border-gray-300 px-3 py-2 text-xs font-semibold hover:border-gray-900">Edit</button></td></tr>`).join('')}</tbody></table></div>`
+                : '<p class="py-10 text-center text-sm text-gray-500">No products found.</p>';
+
+            document.querySelectorAll('[data-stock]').forEach(button => button.addEventListener('click', () => openStockModal(button)));
+            document.querySelectorAll('[data-edit]').forEach(button => button.addEventListener('click', () => openEditModal(Number(button.dataset.edit))));
+        }
+
+        async function loadOrders() {
+            const response = await fetch(`${API_BASE_URL}/warehouse/orders/pending`, { headers: authHeaders() });
+            if (response.status === 404) pendingOrders = [];
+            else if (!response.ok) throw new Error('Unable to load pending orders.');
+            else pendingOrders = await response.json();
+
+            document.getElementById('pendingStat').textContent = pendingOrders.length;
+            const render = (containerId, limit = pendingOrders.length) => {
+                const container = document.getElementById(containerId);
+                const items = pendingOrders.slice(0, limit);
+                container.innerHTML = items.length ? `<div class="overflow-x-auto"><table class="w-full text-left"><thead class="border-b border-gray-200 text-[10px] uppercase tracking-widest text-gray-400"><tr><th class="py-3">Order</th><th>Product</th><th>Quantity</th><th>Expected</th><th>Status</th><th class="text-right">Update status</th></tr></thead><tbody class="divide-y divide-gray-100">${items.map(item => {
+                    const status = escapeHtml(item.current_status);
+                    const statusClass = String(item.current_status).toLowerCase().includes('dispatched') ? 'bg-gray-100 text-gray-800' : 'bg-amber-50 text-amber-700';
+                    return `<tr><td class="py-4 text-sm font-semibold">${escapeHtml(item.order_id)}</td><td class="text-sm text-gray-600">#${item.product_id}</td><td class="text-sm">${item.quantity}</td><td class="text-sm text-gray-600">${item.expected_delivery || 'Pending'}</td><td><span class="rounded-sm px-2 py-1 text-xs font-medium ${statusClass}">${status}</span></td><td class="text-right"><div class="inline-flex rounded-sm border border-gray-200 bg-white"><button data-order-status='${item.id}' data-status='Packed' class="border-r border-gray-200 px-2 py-2 text-[11px] font-semibold hover:bg-gray-50 ${item.current_status === 'Packed' ? 'bg-gray-900 text-white' : 'text-gray-600'}">Packed</button><button data-order-status='${item.id}' data-status='Dispatched' class="border-r border-gray-200 px-2 py-2 text-[11px] font-semibold hover:bg-gray-50 ${item.current_status === 'Dispatched' ? 'bg-gray-900 text-white' : 'text-gray-600'}">Dispatched</button><button data-order-status='${item.id}' data-status='Delivered' class="px-2 py-2 text-[11px] font-semibold hover:bg-gray-50 ${item.current_status === 'Delivered' ? 'bg-gray-900 text-white' : 'text-gray-600'}">Delivered</button></div></td></tr>`;
+                }).join('')}</tbody></table></div>` : '<p class="py-10 text-center text-sm text-gray-500">No pending orders.</p>';
+            };
+            render('ordersTable');
+            render('dashboardOrders', 5);
+            document.querySelectorAll('[data-order-status]').forEach(button => button.addEventListener('click', () => updateOrderStatus(Number(button.dataset.orderStatus), button.dataset.status)));
+        }
+
+        async function updateOrderStatus(id, status) {
+            if (!confirm(`Mark this order item as ${status}?`)) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/warehouse/orders/status/update?id=${id}&status=${encodeURIComponent(status)}`, { method: 'PATCH', headers: authHeaders() });
+                if (!response.ok) {
+                    const result = await response.json().catch(() => ({}));
+                    throw new Error(result.detail || result.message || 'Unable to update order status.');
+                }
+                showToast(`Order marked ${status.toLowerCase()} successfully.`);
+                await refreshAll();
+            } catch (error) { showToast(error.message); }
+        }
+
+        function openStockModal(button) {
+            const item = inventory.find(value => String(value.id) === button.dataset.stock);
+            if (!item) return;
+            const form = document.getElementById('stockForm');
+            form.inv_id.value = item.id;
+            form.product_id.value = item.product_id;
+            form.stock.value = item.stock;
+            document.getElementById('stockProductName').textContent = item.product_name;
+            document.getElementById('stockCurrent').textContent = `Current stock: ${item.stock} · Reserved: ${item.reserved_stock}`;
+            document.getElementById('stockModal').classList.remove('hidden');
+            document.getElementById('stockModal').classList.add('flex');
+        }
+
+        function openEditModal(productId) {
+            const form = document.getElementById('editForm');
+            form.product_id.value = productId;
+            form.update_type.value = 'price';
+            form.image_action.value = 'edit';
+            form.product_image.value = '';
+            document.getElementById('newValueSection').classList.remove('hidden');
+            document.getElementById('editNewValue').required = true;
+            document.getElementById('editNewValue').value = '';
+            document.getElementById('editProductImageOptions').classList.add('hidden');
+            document.getElementById('editProductImageSection').classList.remove('hidden');
+            document.getElementById('editProductImagePreview').classList.add('hidden');
+            document.getElementById('editProductImagePreview').removeAttribute('src');
+            document.getElementById('editProductImagePath').classList.add('hidden');
+            const item = inventory.find(value => value.product_id === productId);
+            form.new_data.value = '';
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        }
+
+        async function refreshAll() {
+            try {
+                await Promise.all([loadInventory(), loadOrders()]);
+                showToast('Data refreshed.');
+            } catch (error) { showToast(error.message); }
+        }
+
+        document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
+        document.querySelectorAll('.view-button').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
+        document.getElementById('refreshButton').addEventListener('click', refreshAll);
+
+        setupProductImagePreview('productImageFile', 'productImagePreview', 'productImagePath');
+        setupProductImagePreview('editProductImageFile', 'editProductImagePreview', 'editProductImagePath');
+
+        document.getElementById('updateType').addEventListener('change', event => {
+            const isImage = event.target.value === 'image';
+            document.getElementById('newValueSection').classList.toggle('hidden', isImage);
+            document.getElementById('editNewValue').required = !isImage;
+            document.getElementById('editProductImageOptions').classList.toggle('hidden', !isImage);
+            document.getElementById('editProductImageSection').classList.toggle('hidden', !isImage);
+            if (!isImage) {
+                document.getElementById('editProductImageFile').value = '';
+                document.getElementById('editProductImagePreview').classList.add('hidden');
+                document.getElementById('editProductImagePreview').removeAttribute('src');
+                document.getElementById('editProductImagePath').classList.add('hidden');
+            }
+        });
+
+        const productModal = document.getElementById('productModal');
+        document.getElementById('openAddProduct').addEventListener('click', () => { productModal.classList.remove('hidden'); productModal.classList.add('flex'); });
+        document.getElementById('closeProductModal').addEventListener('click', () => {
+            productModal.classList.add('hidden');
+            productModal.classList.remove('flex');
+            document.getElementById('productImageFile').value = '';
+            document.getElementById('productImagePreview').classList.add('hidden');
+            document.getElementById('productImagePreview').removeAttribute('src');
+            document.getElementById('productImagePath').classList.add('hidden');
+        });
+
+        document.getElementById('productForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const form = new FormData(event.target);
+            try {
+                const imageFile = form.get('product_image');
+                const imageUrl = imageFile && typeof imageFile === 'object' && imageFile.size
+                    ? getProductImagePath(imageFile)
+                    : 'assets/product_images/images.png';
+
+                if (imageFile && typeof imageFile === 'object' && imageFile.size) {
+                    await saveProductImageToAssets(imageFile);
+                }
+
+                const response = await fetch(`${API_BASE_URL}/warehouse/product/add`, {
+                    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ product_name: form.get('product_name'), category: form.get('category'), weight: form.get('weight'), price: Number(form.get('price')), image_url: imageUrl })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.detail || result.message || 'Unable to add product.');
+                event.target.reset();
+                document.getElementById('productImagePreview').classList.add('hidden');
+                document.getElementById('productImagePreview').removeAttribute('src');
+                document.getElementById('productImagePath').classList.add('hidden');
+                productModal.classList.add('hidden'); productModal.classList.remove('flex');
+                showToast('Product added successfully.');
+                await refreshAll();
+            } catch (error) { const field = document.getElementById('productFormError'); field.textContent = error.message; field.classList.remove('hidden'); }
+        });
+
+        const stockModal = document.getElementById('stockModal');
+        document.getElementById('closeStockModal').addEventListener('click', () => { stockModal.classList.add('hidden'); stockModal.classList.remove('flex'); });
+        document.getElementById('stockForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const form = new FormData(event.target);
+            try {
+                const response = await fetch(`${API_BASE_URL}/warehouse/product/add/stock`, {
+                    method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ inv_id: Number(form.get('inv_id')), product_id: Number(form.get('product_id')), stock: Number(form.get('stock')) })
+                });
+                if (!response.ok) { const result = await response.json().catch(() => ({})); throw new Error(result.detail || 'Unable to update stock.'); }
+                stockModal.classList.add('hidden'); stockModal.classList.remove('flex');
+                showToast('Stock updated successfully.');
+                await refreshAll();
+            } catch (error) { showToast(error.message); }
+        });
+
+        const editModal = document.getElementById('editModal');
+        document.getElementById('closeEditModal').addEventListener('click', () => {
+            editModal.classList.add('hidden');
+            editModal.classList.remove('flex');
+            document.getElementById('editForm').update_type.value = 'price';
+            document.getElementById('newValueSection').classList.remove('hidden');
+            document.getElementById('editNewValue').required = true;
+            document.getElementById('editProductImageOptions').classList.add('hidden');
+            document.getElementById('editProductImageSection').classList.add('hidden');
+            document.getElementById('editProductImageFile').value = '';
+            document.getElementById('editProductImagePreview').classList.add('hidden');
+            document.getElementById('editProductImagePreview').removeAttribute('src');
+            document.getElementById('editProductImagePath').classList.add('hidden');
+        });
+        document.getElementById('editForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const form = new FormData(event.target);
+            const updateType = form.get('update_type');
+            let newData = form.get('new_data');
+            if (updateType === 'price') newData = Number(newData);
+            try {
+                if (updateType !== 'image') {
+                    const response = await fetch(`${API_BASE_URL}/warehouse/product/update`, {
+                        method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }),
+                        body: JSON.stringify({ product_id: Number(form.get('product_id')), update_type: updateType, new_data: newData })
+                    });
+                    if (!response.ok) { const result = await response.json().catch(() => ({})); throw new Error(result.detail || 'Unable to update product.'); }
+                } else {
+                    const imageFile = form.get('product_image');
+                    if (!imageFile || typeof imageFile !== 'object' || !imageFile.size) {
+                        throw new Error('Please select a product image.');
+                    }
+
+                    const imageUrl = getProductImagePath(imageFile);
+                    await saveProductImageToAssets(imageFile);
+
+                    const imageResponse = await fetch(`${API_BASE_URL}/warehouse/product/add/image?product_id=${encodeURIComponent(form.get('product_id'))}&image_url=${encodeURIComponent(imageUrl)}`, {
+                        method: 'POST', headers: authHeaders()
+                    });
+                    if (!imageResponse.ok) {
+                        const result = await imageResponse.json().catch(() => ({}));
+                        throw new Error(result.detail || 'Unable to save the product image.');
+                    }
+                }
+
+                editModal.classList.add('hidden'); editModal.classList.remove('flex');
+                showToast('Product updated successfully.');
+                await refreshAll();
+            } catch (error) { showToast(error.message); }
+        });
+
+        document.getElementById('managerSignOut').addEventListener('click', () => {
+            ['access_token', 'token_type', 'user_role', 'warehouse_id', 'manager_id'].forEach(key => localStorage.removeItem(key));
+            window.location.href = 'login.html';
+        });
+
+        refreshAll();
+    </script>
+</body>
+</html>

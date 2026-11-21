@@ -1,8 +1,8 @@
-from app.models import Products, Inventory, Warehouse, Managers
+from app.models import Products, Inventory, Warehouse, Managers, ProductsImages
 
 from sqlalchemy import select
 from typing import Any
-
+from sqlalchemy.orm import joinedload
 
 class ProductsRepo:
     def __init__(self, db):
@@ -67,9 +67,11 @@ class ProductsRepo:
             return search_data
 
       
-            
+    def get_all_products(self):
+        stmt = select(self.__products).options(joinedload(self.__products.images))
+        return self.__db.scalars(stmt).unique().all()
 
-        
+
 
 
 class InventoryRepo:
@@ -230,3 +232,34 @@ class ManagersRepo:
                 return data
         except Exception:
             return None
+
+class ImagesRepo:
+    def __init__(self, db):
+        self.db = db
+        self.images_db = ProductsImages
+        self.products_db = Products
+
+
+    def get_product_image(self, product_id : int) -> object:
+        stmt = select(self.images_db).where(self.images_db.product_id == product_id)
+        data = self.db.scalars(stmt).all()
+        return data
+        
+    def add_image(self, product_id : int, image_url : str) -> object:
+        try:
+            add_new = self.images_db(
+                product_id=product_id,
+                image_url=image_url
+            )
+
+            self.db.add(add_new)
+            self.db.commit()
+            self.db.refresh(add_new)
+            return add_new
+
+        except Exception:
+            self.db.rollback()
+            return None
+
+
+        

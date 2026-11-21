@@ -33,7 +33,7 @@ class OrdersRepo:
             else:
                 return order_data
 
-    def update_status(self, order_id : str, updated_type : str, updated_data : Any) -> str | None:
+    def update_status(self, order_id : str, updated_type : str, updated_data : Any) -> object | None:
         if updated_data:
             updated_type = str(updated_type).lower()
             try:
@@ -100,7 +100,10 @@ class OItemsRepo:
                   
     def show_pending_orders(self, warehouse_id : int) -> object | None:
         try:
-            stmt = select(self.__order_items).where(self.__order_items.assigned_warehouse == warehouse_id, self.__order_items.current_status == "Order Placed")
+            stmt = select(self.__order_items).where(
+                self.__order_items.assigned_warehouse == warehouse_id,
+                self.__order_items.current_status.in_(["Order Placed", "Packed", "Dispatched"])
+            )
             results = self.__db.scalars(stmt).all()
             if results:
                 return results
@@ -192,7 +195,11 @@ class OItemsRepo:
         except Exception:
             self.__db.rollback()
             return None               
-            
+
+    def get_order_details(self, order_id : str) -> object:
+        stmt = select(self.__order_items).where(self.__order_items.order_id == order_id)
+        data = self.__db.scalars(stmt).all()
+        return data
 
 
 class PaymentsRepo:

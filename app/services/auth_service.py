@@ -124,7 +124,7 @@ class Authentication:
                         name= name, 
                         mobile_no= mobile_no,
                         password= hashed_password,
-                        role= "Manger"                        
+                        role= "Manager"                        
                     )
                     if create_user:
                         user_data = self.__user_db.get_user("mobile_no", mobile_no)
@@ -167,20 +167,42 @@ class Authentication:
             
 
     def create_auth_token(self, user : object):
-        expiry_time = datetime.now(timezone.utc) + timedelta(minutes=10)
-        payload = {
-            "sub" : "Authentication",
-            "user_id" : user.user_id,
-            "role" : user.role,
-            "exp" : expiry_time
-        }
+        if user.role == "Customer":
 
-        token = jwt.encode(
-            payload,
-            os.getenv("SECRET_KEY"),
-            os.getenv("ALGORITHAM")
-        )
-        return token
+            customer = user.customer
+            expiry_time = datetime.now(timezone.utc) + timedelta(minutes=10)
+            payload = {
+                "sub" : "Authentication",
+                "user_id" : user.user_id,
+                "customer_id" : customer.customer_id,
+                "role" : user.role,
+                "exp" : expiry_time
+            }
+
+            token = jwt.encode(
+                payload,
+                os.getenv("SECRET_KEY"),
+                os.getenv("ALGORITHAM")
+            )
+            return token
+        elif user.role == "Manager":
+            manager = user.manager
+            expiry_time = datetime.now(timezone.utc) + timedelta(minutes=10)
+            payload = {
+                "sub" : "Authentication",
+                "user_id" : user.user_id,
+                "warehouse_id" : manager.warehouse_id,
+                "manager_id" : manager.manager_id,
+                "role" : user.role,
+                "exp" : expiry_time
+            }
+
+            token = jwt.encode(
+                payload,
+                os.getenv("SECRET_KEY"),
+                os.getenv("ALGORITHAM")
+            )
+            return token
 
 
 Oauth2_password = OAuth2PasswordBearer("/auth/signin")

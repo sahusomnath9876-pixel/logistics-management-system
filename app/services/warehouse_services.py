@@ -25,7 +25,10 @@ class WarehouseServices:
 
     def dispatch_orders(self, id : int, status : str) -> object:
         try:
-            status = str(status)
+            status = str(status).strip().title()
+            allowed_statuses = {"Packed", "Dispatched", "Delivered"}
+            if status not in allowed_statuses:
+                raise InvalidCerdiantials("Invalid order status")
             orders = self.pending_orders()
             if not orders:
                 raise NotFoundError("No Orders Found")
