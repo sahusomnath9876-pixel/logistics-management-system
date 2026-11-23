@@ -78,8 +78,8 @@ class PaymentsService:
                     else:
                         raise InvalidCerdiantials("We are not acception this upi")
 
-                elif payment_method == "Card":
-                    if len(cerdentials.get("card_number")) != 16:
+                elif payment_method == "CARD":
+                    if len(str(cerdentials.get("card_number"))) != 16:
                         raise InvalidCerdiantials("Invalid Card Number")
                     if cerdentials.get("expiry_date") < date.today():
                         raise InvalidCerdiantials("Date Expired")
